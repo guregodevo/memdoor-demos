@@ -110,8 +110,9 @@ of the previous one's).
 | problem | harness, samples only | harness, samples + stress |
 |---|---|---|
 | arc196_a | done at round 2, 4/43, $0.074 | round 1: samples 3/3, stress FAILED on input 5 of 200; round 2: samples 3/3, stress ok, done; **43/43**, 12 calls, $0.32 |
+| arc196_d | done at round 2, 2/42, $0.47 | round 1: samples 2/2, stress ok, done at round 2; **42/42**, 9 calls, $0.42, 18 min |
 
-The authors' harness solves arc196_a in all five passes. One problem is one problem; the
+The authors' harness solves both in all five passes. Two problems are two problems; the
 batch of ten and the hundred are next, one at a time.
 
 ### What is not apple to apple yet
