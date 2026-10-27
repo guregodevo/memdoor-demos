@@ -1,0 +1,10 @@
+type: command
+requires:
+  - table_pattern: digest-1
+command: |
+  cat > digest-1.md <<'MEMDOOR_DIG_EOF'
+  {{ output "digest-1" }}
+  MEMDOOR_DIG_EOF
+  cat digest-1.md
+timeout: 2m
+max_retries: 0

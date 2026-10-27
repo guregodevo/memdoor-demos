@@ -1,0 +1,13 @@
+type: command
+requires:
+  - table_pattern: manage-1
+command: |
+  cat > manage-reply-1.md <<'MEMDOOR_MGMT_EOF'
+  {{ output "manage-1" }}
+  MEMDOOR_MGMT_EOF
+  status=$(awk '/^### STATUS/{f=1;next} /^### /{f=0} f' manage-reply-1.md | tr -d '[:space:]')  # to the next header or the end: a reply that stops at STATUS done has no header after it
+  next=$(awk '/^### NEXT/{f=1;next} /^### /{f=0} f' manage-reply-1.md)
+  printf '%s\n' "$status" > status-1.txt
+  printf '%s\n' "$next" > next-1.txt
+  sed -n '/^### TASKS/,$p' manage-reply-1.md | tail -n +2 > tasks.json
+  cat manage-reply-1.md status-1.txt next-1.txt

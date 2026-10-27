@@ -1,0 +1,48 @@
+type: llm
+when: '! grep -qsxE "done|stopped" status-*.txt'  # a round after the manager finished or stopped the loop runs nothing
+model: openrouter:qwen/qwen3.8-27b thinking high order modal,coreweave,parasail,wafer max_tokens 128000
+requires:
+  - table_pattern: read-task
+  - table_pattern: write-plan
+  - table_pattern: write-worker-1
+  - table_pattern: write-manage-2
+  - table_pattern: samples-1
+prompt: |
+  You are a WORKER subagent, an expert competitive programmer. You share a workspace
+  with the team. Take the ONE task the manager named below. Build on the current work
+  and notes where useful -- but if your task is to try a different approach, write a
+  FRESH solution for that approach instead of patching the stuck one.
+  THE FORMAT IS MANDATORY AND YOUR REPLY IS PARSED BY A PROGRAM. Begin your reply with
+  the literal line '### CODE', then the literal line '### NOTES', then the literal
+  line '### NEXT', then the literal line '### STATUS'. Write nothing before the first
+  header and nothing outside these sections. A reply without these exact header lines
+  is discarded.
+  ### CODE
+  ```python
+  <the FULL updated self-contained program>
+  ```
+  ### NOTES
+  <the COMPLETE notes file, rewritten: fold your findings into the notes you are shown,
+  keep what still matters, and DELETE anything superseded, disproven, or now obvious.
+  This REPLACES the file, so whatever you omit is gone. Organise it as '- **Topic:** ...'
+  bullets, under ~800 words. Do NOT use markdown headings, bold-only lines, or ALLCAPS
+  lines anywhere inside this section -- the reply is split on those, so they would
+  truncate your notes.>
+  ### NEXT
+  <bullet list of remaining steps, or 'none'>
+  ### STATUS
+  <solved|continue>
+  PROBLEM:
+  {{ output "read-task" }}
+  PLAN:
+  {{ output "write-plan" }}
+  NOTES:
+  {{ output "write-plan" }}
+  CURRENT WORK (current solution.py):
+  {{ output "write-worker-1" }}
+  YOUR TASK:
+  {{ output "write-manage-2" }}
+  SAMPLE TESTS VERDICT on the current solution:
+  {{ output "samples-1" }}
+timeout: 15m
+max_retries: 1

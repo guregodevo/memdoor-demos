@@ -1,0 +1,14 @@
+type: command
+requires:
+  - table_pattern: write-finalize
+command: |
+  bash .memdoor/workflows/gvs5h/check-samples.sh > final-test-output.log 2>&1; st=$?
+  if [ "$st" -eq 0 ]; then
+      echo "PASSED: solution.py passed all public sample tests." > test-status.txt
+  else
+      echo "FAILED: solution.py failed the public sample tests (exit $st)." > test-status.txt
+  fi
+  cat final-test-output.log test-status.txt
+  exit "$st"
+timeout: 5m
+max_retries: 0

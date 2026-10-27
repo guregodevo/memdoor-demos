@@ -1,0 +1,14 @@
+type: command
+requires:
+  - table_pattern: ideate
+command: |
+  cat > ideation-reply.md <<'MEMDOOR_IDEA_EOF'
+  {{ output "ideate" }}
+  MEMDOOR_IDEA_EOF
+  printf '\n## ideation\n' >> notes.md
+  sed -n '/^### NOTES/,/^### NEXT/p' ideation-reply.md | sed '1d;$d' >> notes.md
+  printf '\n### proposals\n' >> notes.md
+  sed -n '/^### NEXT/,$p' ideation-reply.md | tail -n +2 >> notes.md
+  cat notes.md
+timeout: 2m
+max_retries: 0

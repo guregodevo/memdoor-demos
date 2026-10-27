@@ -1,0 +1,30 @@
+type: llm
+model: openrouter:qwen/qwen3.8-27b thinking high order modal,coreweave,parasail,wafer max_tokens 128000
+requires:
+  - table_pattern: read-task
+  - table_pattern: write-plan
+prompt: |
+  You are the FIRST WORKER. Do NOT solve the problem and do NOT write any code. Just
+  think about it: identify the core difficulty, then list SEVERAL DISTINCT candidate
+  approaches (genuinely different algorithms / data structures / problem reductions,
+  not variations of one idea), and note pitfalls for each. Describe each approach in
+  prose only -- absolutely no code blocks; a later worker will implement.
+
+  THE FORMAT IS MANDATORY AND YOUR REPLY IS PARSED BY A PROGRAM. Begin your reply with
+  the literal line '### NOTES', then the literal line '### NEXT'. Write nothing before
+  the first header and nothing outside these sections. A reply without these exact
+  header lines is discarded.
+
+  ### NOTES
+  <your analysis>
+
+  ### NEXT
+  <bullet list of distinct approaches to try next>
+
+  PROBLEM:
+  {{ output "read-task" }}
+
+  PLAN:
+  {{ output "write-plan" }}
+timeout: 10m
+max_retries: 1

@@ -1,0 +1,13 @@
+type: command
+requires:
+  - table_pattern: write-worker-1
+command: |
+  bash .memdoor/workflows/gvs5h/check-samples.sh > test-output-1.log 2>&1; st=$?
+  if [ "$st" -eq 0 ]; then
+      echo "[SAMPLE TESTS: PASSED all samples -- the solution looks correct.] " > samples-1.txt
+  else
+      echo "[SAMPLE TESTS: FAILED -- the current solution is WRONG (exit $st). Fix the bug or, if this approach keeps failing, switch to a DIFFERENT approach.] " > samples-1.txt
+  fi
+  cat test-output-1.log samples-1.txt
+timeout: 5m
+max_retries: 0

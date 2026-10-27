@@ -1,0 +1,11 @@
+type: command
+when: '! grep -qsxE "done|stopped" status-*.txt'  # a round after the manager finished or stopped the loop runs nothing
+requires:
+  - table_pattern: digest-2
+command: |
+  cat > digest-2.md <<'MEMDOOR_DIG_EOF'
+  {{ output "digest-2" }}
+  MEMDOOR_DIG_EOF
+  cat digest-2.md
+timeout: 2m
+max_retries: 0
