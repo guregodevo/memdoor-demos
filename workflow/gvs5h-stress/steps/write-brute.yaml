@@ -1,0 +1,12 @@
+type: command
+when: '! grep -qsxE "done|stopped" status-*.txt'
+requires:
+  - table_pattern: brute
+command: |
+  cat > brute-reply.raw <<'MEMDOOR_BRUTE_EOF'
+  {{ output "brute" }}
+  MEMDOOR_BRUTE_EOF
+  awk '/^```python/{f=1;next} /^```[ ]*$/{if(f)exit} f' brute-reply.raw > brute.py
+  head -5 brute.py
+timeout: 2m
+max_retries: 0

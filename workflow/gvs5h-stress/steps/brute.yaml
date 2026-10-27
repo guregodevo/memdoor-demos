@@ -1,0 +1,26 @@
+type: llm
+when: '! grep -qsxE "done|stopped" status-*.txt'
+model: openrouter:qwen/qwen3.8-27b thinking high order modal,coreweave,parasail,wafer max_tokens 128000
+requires:
+  - table_pattern: read-task
+prompt: |
+  You are a worker writing a BRUTE-FORCE REFERENCE implementation, saved as brute.py,
+  for the problem below. Write the slowest, most obviously correct method you can:
+  enumerate or simulate directly, no cleverness, no optimizations, no shortcuts.
+  Keep the code as simple as possible so it is obviously right. It must read the
+  input from stdin in the EXACT input format described in PROBLEM and print the
+  answer to stdout in the EXACT output format. Only SMALL inputs will ever be fed to
+  it (tiny n, far below the problem's real limits), so slowness does not matter --
+  but it must be correct on every small input. Self-contained, Python 3, no imports
+  beyond the standard library.
+  THE FORMAT IS MANDATORY AND YOUR REPLY IS PARSED BY A PROGRAM. Begin your reply with
+  the literal line '### CODE', then a fenced ```python block. Write nothing before
+  the header and nothing after the closing fence. A reply without these is discarded.
+  ### CODE
+  ```python
+  <the full self-contained brute.py>
+  ```
+  PROBLEM:
+  {{ output "read-task" }}
+timeout: 10m
+max_retries: 1

@@ -1,0 +1,12 @@
+type: command
+requires:
+  - table_pattern: plan
+command: |
+  cat > plan.md <<'MEMDOOR_PLAN_EOF'
+  {{ output "plan" }}
+  MEMDOOR_PLAN_EOF
+  : > notes.md
+  sed -n '/^### TASKS/,$p' plan.md | tail -n +2 > tasks.json
+  cat plan.md
+timeout: 2m
+max_retries: 0

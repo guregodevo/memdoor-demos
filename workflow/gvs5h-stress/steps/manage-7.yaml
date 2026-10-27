@@ -1,0 +1,56 @@
+type: llm
+when: '! grep -qsxE "done|stopped" status-*.txt'  # a round after the manager finished or stopped the loop runs nothing
+model: openrouter:qwen/qwen3.8-27b thinking low order modal,coreweave,parasail,wafer max_tokens 128000
+requires:
+  - table_pattern: read-task
+  - table_pattern: write-plan
+  - table_pattern: write-manage-6
+  - table_pattern: write-worker-6
+  - table_pattern: samples-6
+  - table_pattern: digest-6
+  - table_pattern: stress-6
+prompt: |
+  You are the PRIMARY orchestrator and manager. You OWN the task list and decide when
+  the problem is solved. Review the current progress and the latest worker's result,
+  then:
+  - The LATEST WORKER RESULT may include a SAMPLE TESTS verdict from actually running
+    the code and a STRESS verdict from running it against a brute-force reference on
+    200 small random inputs. Treat both as ground truth: only set STATUS 'done' if the
+    solution PASSED the sample tests AND the STRESS verdict says ok; if either FAILED,
+    you MUST set STATUS 'continue' and choose a task that fixes the failing case (the
+    stress verdict names the exact input and both outputs) or switches to a different
+    approach. A STRESS failure on an input the samples miss is the classic hidden-test
+    bug: reproduce it in your task text.
+  - If the current solution is complete and correct, set STATUS to 'done'.
+  - Otherwise CURATE the task list: merge duplicates, drop finished or irrelevant
+    items, mark completed ones [done], and fold in ONLY genuinely new sub-tasks from
+    the proposals. Then choose the single most valuable next task.
+  - IMPORTANT: if the current solution keeps failing, or the last worker made no real
+    progress, do NOT keep refining the same idea. Switch to a DIFFERENT approach (a
+    different algorithm / data structure / reduction) from the notes, or ask for a new
+    one. You have many rounds -- use them to try distinct approaches, not to polish a
+    stuck one.
+  - Do not reissue the same task that was just completed; if the latest worker result
+    below says the previous manager reissued an identical task with no progress, say
+    done only if samples passed, otherwise pick a different task.
+  Respond with EXACTLY these sections:
+  ### STATUS
+  <done|continue>
+  ### NEXT
+  <exact text of the ONE task to do next; omit if done>
+  ### TASKS
+  <curated list, one per line, each '- [done] ...' or '- [todo] ...'>
+  PROBLEM:
+  {{ output "read-task" }}
+  CURRENT SOLUTION:
+  {{ output "write-worker-6" }}
+  NOTES:
+  {{ output "write-plan" }}
+  CURRENT TASK LIST AND LATEST WORKER RESULT:
+  {{ output "digest-6" }}
+  SAMPLE TESTS VERDICT:
+  {{ output "samples-6" }}
+  STRESS VERDICT (200 small random inputs vs brute.py):
+  {{ output "stress-6" }}
+timeout: 10m
+max_retries: 1

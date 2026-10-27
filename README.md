@@ -95,6 +95,25 @@ problems solved on all tests, one call each, $0.62 (about 2.6 cents a problem). 
 **Earlier, thinking off, all hundred** (`results/*-thinking-off-100.tsv`): the single call and
 Memdoor's own `team-solve` workflow, before the GVS5H build; kept for the record.
 
+### Round two: a stress test as ground truth (2026-10-27)
+
+Both batch failures said done with the public samples green and failed 39 and 40 hidden
+tests. `prompts/improve.md` asked the coder for a brute-force check as the ground truth
+for done, built from standard tasks only: a brute-force reference and a random generator
+written once, a command task per round that diffs the solution against the brute force on
+200 small inputs with a 2 s limit, gated with `when:` on that round's samples passing, and
+the next manager reading the mismatch as a failing test. Thinking high stays on the workers
+only. `workflow/gvs5h-stress` is the result (92 tasks); one line per round that the first
+run proved wrong was fixed by hand (the manager read its own round's sample verdict instead
+of the previous one's).
+
+| problem | harness, samples only | harness, samples + stress |
+|---|---|---|
+| arc196_a | done at round 2, 4/43, $0.074 | round 1: samples 3/3, stress FAILED on input 5 of 200; round 2: samples 3/3, stress ok, done; **43/43**, 12 calls, $0.32 |
+
+The authors' harness solves arc196_a in all five passes. One problem is one problem; the
+batch of ten and the hundred are next, one at a time.
+
 ### What is not apple to apple yet
 
 - **Grader**: `bench/grade.py` runs the hidden tests as they ship in LiveCodeBench; the authors
@@ -102,7 +121,7 @@ Memdoor's own `team-solve` workflow, before the GVS5H build; kept for the record
 - **Serving**: the authors ran the model on their own hardware; here the calls go to whichever
   OpenRouter host answers first among four. Throughput and the output window differ by host.
 - **Output cap**: the ten-problem batch ran before `max_tokens 128000` existed; the paper's
-  runs had 128K.
+  runs had 128K. The stress-test runs carry the cap.
 - **Sample size**: six and twenty-four problems, one pass. Their numbers are a hundred problems,
   five passes.
 

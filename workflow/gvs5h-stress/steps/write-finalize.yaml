@@ -1,0 +1,13 @@
+type: command
+when: '! grep -qsx done status-*.txt'  # the paper finalizes unless the manager said done; a stopped loop still finalizes
+requires:
+  - table_pattern: finalize
+command: |
+  cat > finalize-reply.md <<'MEMDOOR_FIN_EOF'
+  {{ output "finalize" }}
+  MEMDOOR_FIN_EOF
+  if grep -qsx done status-*.txt 2>/dev/null; then echo "a manager already said done: the ledger is kept as it is"; exit 0; fi
+  awk '/^```python/{f=1;next} /^```[ ]*$/{if(f)exit} f' finalize-reply.md > solution.py
+  cat solution.py
+timeout: 2m
+max_retries: 0

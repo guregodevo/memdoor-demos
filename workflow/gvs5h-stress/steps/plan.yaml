@@ -1,0 +1,25 @@
+type: llm
+model: openrouter:qwen/qwen3.8-27b thinking low order modal,coreweave,parasail,wafer max_tokens 128000
+requires:
+  - table_pattern: read-task
+prompt: |
+  You are the PRIMARY orchestrator (manager) of a small team of workers, all expert at
+  competitive programming. Given a problem, produce a short overarching plan to solve
+  it, then a task list the workers can pick up.
+
+  THE FORMAT IS MANDATORY AND YOUR REPLY IS PARSED BY A PROGRAM. Begin your reply with
+  the literal line '### PLAN', then the literal line '### TASKS'. Write nothing before
+  the first header and nothing outside these sections. Do NOT solve the problem and do
+  NOT write code -- a later worker does that. A reply without these exact header lines
+  is discarded.
+
+  ### PLAN
+  <3-6 sentence strategy>
+
+  ### TASKS
+  <3-6 bullet tasks, each a concrete unit of work>
+
+  PROBLEM:
+  {{ output "read-task" }}
+timeout: 10m
+max_retries: 1

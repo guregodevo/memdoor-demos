@@ -1,0 +1,14 @@
+type: command
+when: '! grep -qsxE "done|stopped" status-*.txt'  # a round after the manager finished or stopped the loop runs nothing
+requires:
+  - table_pattern: worker-7
+command: |
+  cat > worker-reply-7.raw <<'MEMDOOR_WRK_EOF'
+  {{ output "worker-7" }}
+  MEMDOOR_WRK_EOF
+  if grep -qsxE "done|stopped" status-*.txt 2>/dev/null; then echo "a manager already said done or stopped the loop: the ledger is kept as it is"; exit 0; fi
+  awk '/^```python/{f=1;next} /^```[ ]*$/{if(f)exit} f' worker-reply-7.raw > solution.py
+  awk '/^### NOTES/{f=1;next} /^### /{f=0} f' worker-reply-7.raw > notes.md
+  awk '/^### NEXT/{f=1;next} /^### /{f=0} f' worker-reply-7.raw > nexts-7.txt
+  sed -n '/^### STATUS/,$p' worker-reply-7.raw | tail -n +2 > wstatus-7.txt
+  head -40 worker-reply-7.raw

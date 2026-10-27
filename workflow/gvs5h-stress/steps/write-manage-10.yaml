@@ -1,0 +1,16 @@
+type: command
+when: '! grep -qsxE "done|stopped" status-*.txt'  # a round after the manager finished or stopped the loop runs nothing
+requires:
+  - table_pattern: manage-10
+command: |
+  cat > manage-reply-10.md <<'MEMDOOR_MGMT_EOF'
+  {{ output "manage-10" }}
+  MEMDOOR_MGMT_EOF
+  if ls status-*.txt 2>/dev/null | grep -v "^status-10.txt$" | xargs grep -qsxE "done|stopped" 2>/dev/null; then (ls status-*.txt | grep -v "^status-10.txt$" | xargs grep -hsxE "done|stopped" | head -1) > status-10.txt; : > next-10.txt; echo "an earlier manager said done: this round passes the ledger on"; exit 0; fi
+  status=$(awk '/^### STATUS/{f=1;next} /^### /{f=0} f' manage-reply-10.md | tr -d '[:space:]')  # to the next header or the end: a reply that stops at STATUS done has no header after it
+  next=$(awk '/^### NEXT/{f=1;next} /^### /{f=0} f' manage-reply-10.md)
+  printf '%s\n' "$status" > status-10.txt
+  printf '%s\n' "$next" > next-10.txt
+  if [ "$status" != done ] && [ -s next-10.txt ] && [ -s next-9.txt ] && [ "$(tr -d '[:space:]' < next-10.txt | tr A-Z a-z)" = "$(tr -d '[:space:]' < next-9.txt | tr A-Z a-z)" ]; then echo stopped > status-10.txt; echo "the manager reissued the same task: no progress, the loop stops here (max retries)"; fi
+  sed -n '/^### TASKS/,$p' manage-reply-10.md | tail -n +2 > tasks.json
+  cat manage-reply-10.md status-10.txt next-10.txt

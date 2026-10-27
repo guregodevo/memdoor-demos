@@ -1,0 +1,39 @@
+type: command
+when: grep -qs "PASSED" samples-5.txt && ! grep -qsxE "done|stopped" status-*.txt  # only after the public samples passed, and only while the loop is live
+requires:
+  - table_pattern: samples-5
+  - table_pattern: write-brute
+  - table_pattern: write-gen
+command: |
+  rm -f stress-5.txt stress-in-5.txt s-out-5.txt b-out-5.txt
+  verdict=ok
+  for i in $(seq 1 200); do
+      if ! python3 gen.py > stress-in-5.txt 2>/dev/null; then
+          verdict=genfail; break
+      fi
+      perl -e 'alarm shift; exec @ARGV or exit 127' 2 python3 solution.py < stress-in-5.txt > s-out-5.txt 2>/dev/null; s=$?
+      perl -e 'alarm shift; exec @ARGV or exit 127' 2 python3 brute.py < stress-in-5.txt > b-out-5.txt 2>/dev/null; b=$?
+      if [ "$s" -ne 0 ] || [ "$b" -ne 0 ]; then
+          verdict=crash; break
+      fi
+      if ! diff -q s-out-5.txt b-out-5.txt >/dev/null 2>&1; then
+          verdict=mismatch; break
+      fi
+  done
+  case "$verdict" in
+      ok)
+          { echo "[STRESS: ok -- solution.py matched brute.py on 200 small random inputs.]"; } > stress-5.txt
+          ;;
+      genfail)
+          { echo "[STRESS: FAILED -- gen.py exited unsuccessfully or produced invalid input on iteration $i.]"; cat stress-in-5.txt 2>/dev/null; } > stress-5.txt
+          ;;
+      crash)
+          { echo "[STRESS: FAILED -- solution.py or brute.py timed out (2 s) or crashed on iteration $i. INPUT:]"; cat stress-in-5.txt; echo "--- solution.py:"; cat s-out-5.txt; echo "--- brute.py:"; cat b-out-5.txt; } > stress-5.txt
+          ;;
+      mismatch)
+          { echo "[STRESS: FAILED -- outputs differ on iteration $i. THIS IS A FAILING TEST; fix the bug it exposes. INPUT:]"; cat stress-in-5.txt; echo "--- solution.py output:"; cat s-out-5.txt; echo "--- brute.py output:"; cat b-out-5.txt; } > stress-5.txt
+          ;;
+  esac
+  cat stress-5.txt
+timeout: 10m
+max_retries: 0

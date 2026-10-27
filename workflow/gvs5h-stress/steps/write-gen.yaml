@@ -1,0 +1,12 @@
+type: command
+when: '! grep -qsxE "done|stopped" status-*.txt'
+requires:
+  - table_pattern: gen
+command: |
+  cat > gen-reply.raw <<'MEMDOOR_GEN_EOF'
+  {{ output "gen" }}
+  MEMDOOR_GEN_EOF
+  awk '/^```python/{f=1;next} /^```[ ]*$/{if(f)exit} f' gen-reply.raw > gen.py
+  head -5 gen.py
+timeout: 2m
+max_retries: 0

@@ -1,0 +1,19 @@
+type: llm
+when: '! grep -qsxE "done|stopped" status-*.txt'  # a round after the manager finished or stopped the loop runs nothing
+model: openrouter:qwen/qwen3.8-27b thinking low order modal,coreweave,parasail,wafer max_tokens 128000
+requires:
+  - table_pattern: write-worker-7
+prompt: |
+  A worker's solution attempt is shown below, together with the problem it works on.
+  Summarize its attempt in 3-5 sentences: which approach it pursued, what it
+  established or ruled out, how far it got, whether it hit the token limit and was cut
+  off before finishing (if the reply is truncated mid-code or mid-sentence, say so
+  explicitly and say the approach was too long to finish in one call), and what
+  remained unfinished. Be concrete so the manager can resume or judge it. Do NOT try
+  to finish the solution yourself. Reply with the summary only.
+  PROBLEM:
+  {{ output "read-task" }}
+  WORKER ATTEMPT:
+  {{ output "write-worker-7" }}
+timeout: 5m
+max_retries: 1

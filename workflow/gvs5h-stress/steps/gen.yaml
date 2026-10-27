@@ -1,0 +1,25 @@
+type: llm
+when: '! grep -qsxE "done|stopped" status-*.txt'
+model: openrouter:qwen/qwen3.8-27b thinking high order modal,coreweave,parasail,wafer max_tokens 128000
+requires:
+  - table_pattern: read-task
+prompt: |
+  You are a worker writing a RANDOM INPUT GENERATOR, saved as gen.py, for the problem
+  below. READ THE CONSTRAINTS in the problem statement. Each run must PRINT ONE small,
+  VALID input of the problem to stdout (in the exact input format), chosen at random.
+  Keep n and every other size parameter TINY (a few elements at most, far below the
+  real constraints) so a brute-force reference finishes in under a second on it.
+  Values must satisfy every constraint (ranges, sortedness, edge cases like 0, 1,
+  duplicates, extremes) -- an invalid input makes the stress test meaningless. Use
+  Python's random module freely.
+  THE FORMAT IS MANDATORY AND YOUR REPLY IS PARSED BY A PROGRAM. Begin your reply with
+  the literal line '### CODE', then a fenced ```python block. Write nothing before
+  the header and nothing after the closing fence. A reply without these is discarded.
+  ### CODE
+  ```python
+  <the full self-contained gen.py>
+  ```
+  PROBLEM:
+  {{ output "read-task" }}
+timeout: 10m
+max_retries: 1
