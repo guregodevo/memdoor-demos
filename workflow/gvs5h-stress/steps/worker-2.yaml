@@ -48,5 +48,9 @@ prompt: |
   STRESS VERDICT on the current solution (200 small random inputs vs brute.py; on a
   mismatch it names the exact input and both outputs -- reproduce that input):
   {{ output "stress-1" }}
+  If that STRESS VERDICT is INCONCLUSIVE (brute.py itself crashed or timed out), the
+  reference is wrong, not necessarily the solution: add a section with the literal line
+  '### BRUTE' holding a fenced ```python block with a corrected brute.py (the slowest
+  obviously correct method, small inputs only, same input contract as the solution).
 timeout: 15m
 max_retries: 1

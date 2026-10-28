@@ -20,7 +20,9 @@ prompt: |
     you MUST set STATUS 'continue' and choose a task that fixes the failing case (the
     stress verdict names the exact input and both outputs) or switches to a different
     approach. A STRESS failure on an input the samples miss is the classic hidden-test
-    bug: reproduce it in your task text.
+    bug: reproduce it in your task text. A STRESS verdict marked INCONCLUSIVE means
+    brute.py, the reference, failed -- not the solution: STATUS 'continue', and the next
+    task must include rewriting brute.py (the worker adds a ### BRUTE section).
   - If the current solution is complete and correct, set STATUS to 'done'.
   - Otherwise CURATE the task list: merge duplicates, drop finished or irrelevant
     items, mark completed ones [done], and fold in ONLY genuinely new sub-tasks from

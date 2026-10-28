@@ -10,4 +10,5 @@ command: |
   awk '/^### NOTES/{f=1;next} /^### /{f=0} f' worker-reply-1.raw > notes.md
   awk '/^### NEXT/{f=1;next} /^### /{f=0} f' worker-reply-1.raw > nexts-1.txt
   sed -n '/^### STATUS/,$p' worker-reply-1.raw | tail -n +2 > wstatus-1.txt
+  awk '/^### BRUTE/{f=1;next} /^### /{f=0} f' worker-reply-1.raw | awk '/^```python/{f=1;next} /^```[ ]*$/{if(f)exit} f' > brute-new-1.py; if [ -s brute-new-1.py ]; then mv brute-new-1.py brute.py; echo "brute.py rewritten by the worker"; else rm -f brute-new-1.py; fi
   head -40 worker-reply-1.raw

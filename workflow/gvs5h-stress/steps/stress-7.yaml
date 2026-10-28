@@ -5,16 +5,19 @@ requires:
   - table_pattern: write-brute
   - table_pattern: write-gen
 command: |
-  rm -f stress-7.txt stress-in-7.txt s-out-7.txt b-out-7.txt
+  rm -f stress-7.txt stress-in-7.txt s-out-7.txt b-out-7.txt s-err-7.txt b-err-7.txt
   verdict=ok
   for i in $(seq 1 200); do
       if ! python3 gen.py > stress-in-7.txt 2>/dev/null; then
           verdict=genfail; break
       fi
-      perl -e 'alarm shift; exec @ARGV or exit 127' 2 bash .memdoor/workflows/gvs5h/run.sh solution.py < stress-in-7.txt > s-out-7.txt 2>/dev/null; s=$?
-      perl -e 'alarm shift; exec @ARGV or exit 127' 2 bash .memdoor/workflows/gvs5h/run.sh brute.py < stress-in-7.txt > b-out-7.txt 2>/dev/null; b=$?
-      if [ "$s" -ne 0 ] || [ "$b" -ne 0 ]; then
+      perl -e 'alarm shift; exec @ARGV or exit 127' 2 bash .memdoor/workflows/gvs5h/run.sh solution.py < stress-in-7.txt > s-out-7.txt 2> s-err-7.txt; s=$?
+      perl -e 'alarm shift; exec @ARGV or exit 127' 2 bash .memdoor/workflows/gvs5h/run.sh brute.py < stress-in-7.txt > b-out-7.txt 2> b-err-7.txt; b=$?
+      if [ "$s" -ne 0 ]; then
           verdict=crash; break
+      fi
+      if [ "$b" -ne 0 ]; then
+          verdict=brutefail; break
       fi
       if ! diff -q s-out-7.txt b-out-7.txt >/dev/null 2>&1; then
           verdict=mismatch; break
@@ -28,7 +31,10 @@ command: |
           { echo "[STRESS: FAILED -- gen.py exited unsuccessfully or produced invalid input on iteration $i.]"; cat stress-in-7.txt 2>/dev/null; } > stress-7.txt
           ;;
       crash)
-          { echo "[STRESS: FAILED -- solution.py or brute.py timed out (2 s) or crashed on iteration $i. INPUT:]"; cat stress-in-7.txt; echo "--- solution.py:"; cat s-out-7.txt; echo "--- brute.py:"; cat b-out-7.txt; } > stress-7.txt
+          { echo "[STRESS: FAILED -- solution.py timed out (2 s) or crashed on iteration $i. THIS IS A FAILING TEST. INPUT:]"; cat stress-in-7.txt; echo "--- solution.py stdout:"; cat s-out-7.txt; echo "--- solution.py stderr:"; tail -5 s-err-7.txt; } > stress-7.txt
+          ;;
+      brutefail)
+          { echo "[STRESS: INCONCLUSIVE -- brute.py, the reference, crashed or timed out (2 s) on iteration $i; this says nothing about solution.py. The worker must REWRITE brute.py (section ### BRUTE): the slowest obviously correct method, small inputs only, same input contract. INPUT:]"; cat stress-in-7.txt; echo "--- brute.py stderr:"; tail -5 b-err-7.txt; } > stress-7.txt
           ;;
       mismatch)
           { echo "[STRESS: FAILED -- outputs differ on iteration $i. THIS IS A FAILING TEST; fix the bug it exposes. INPUT:]"; cat stress-in-7.txt; echo "--- solution.py output:"; cat s-out-7.txt; echo "--- brute.py output:"; cat b-out-7.txt; } > stress-7.txt
