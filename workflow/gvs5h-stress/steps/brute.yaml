@@ -12,7 +12,9 @@ prompt: |
   answer to stdout in the EXACT output format. Only SMALL inputs will ever be fed to
   it (tiny n, far below the problem's real limits), so slowness does not matter --
   but it must be correct on every small input. Self-contained, Python 3, no imports
-  beyond the standard library.
+  beyond the standard library. If PROBLEM gives starter code (a class Solution with a
+  method), brute.py defines that same class and method with the same signature and is
+  called by the harness with the arguments -- it reads nothing from stdin and prints nothing.
   THE FORMAT IS MANDATORY AND YOUR REPLY IS PARSED BY A PROGRAM. Begin your reply with
   the literal line '### CODE', then a fenced ```python block. Write nothing before
   the header and nothing after the closing fence. A reply without these is discarded.

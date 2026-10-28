@@ -11,8 +11,8 @@ command: |
       if ! python3 gen.py > stress-in-1.txt 2>/dev/null; then
           verdict=genfail; break
       fi
-      perl -e 'alarm shift; exec @ARGV or exit 127' 2 python3 solution.py < stress-in-1.txt > s-out-1.txt 2>/dev/null; s=$?
-      perl -e 'alarm shift; exec @ARGV or exit 127' 2 python3 brute.py < stress-in-1.txt > b-out-1.txt 2>/dev/null; b=$?
+      perl -e 'alarm shift; exec @ARGV or exit 127' 2 bash .memdoor/workflows/gvs5h/run.sh solution.py < stress-in-1.txt > s-out-1.txt 2>/dev/null; s=$?
+      perl -e 'alarm shift; exec @ARGV or exit 127' 2 bash .memdoor/workflows/gvs5h/run.sh brute.py < stress-in-1.txt > b-out-1.txt 2>/dev/null; b=$?
       if [ "$s" -ne 0 ] || [ "$b" -ne 0 ]; then
           verdict=crash; break
       fi

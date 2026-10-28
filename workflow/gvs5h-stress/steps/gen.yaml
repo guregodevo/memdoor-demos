@@ -11,7 +11,9 @@ prompt: |
   real constraints) so a brute-force reference finishes in under a second on it.
   Values must satisfy every constraint (ranges, sortedness, edge cases like 0, 1,
   duplicates, extremes) -- an invalid input makes the stress test meaningless. Use
-  Python's random module freely.
+  Python's random module freely. If PROBLEM gives starter code (a class Solution with a
+  method), print the method's arguments instead, one JSON value per line in parameter
+  order, exactly as the samples show them.
   THE FORMAT IS MANDATORY AND YOUR REPLY IS PARSED BY A PROGRAM. Begin your reply with
   the literal line '### CODE', then a fenced ```python block. Write nothing before
   the header and nothing after the closing fence. A reply without these is discarded.

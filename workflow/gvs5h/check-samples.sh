@@ -18,10 +18,10 @@ for input in "${inputs[@]}"; do
         failures=$((failures + 1))
         continue
     fi
-    if ! python3 solution.py < "$input" > "$actual"; then
+    if ! bash "$(dirname "${BASH_SOURCE[0]}")/run.sh" solution.py < "$input" > "$actual"; then
         printf 'FAIL %s: solution exited unsuccessfully\n' "$input"
         failures=$((failures + 1))
-    elif diff -u "$expected" "$actual"; then
+    elif { [ -f tests/func_name ] && python3 -c 'import json,sys; a,b=[open(f).read().strip() for f in sys.argv[1:]]; sys.exit(0 if json.loads(a)==json.loads(b) else 1)' "$expected" "$actual" 2>/dev/null; } || { [ ! -f tests/func_name ] && diff -u "$expected" "$actual"; }; then
         printf 'PASS %s\n' "$input"
     else
         printf 'FAIL %s: output differs\n' "$input"
