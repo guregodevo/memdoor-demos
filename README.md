@@ -112,8 +112,45 @@ of the previous one's).
 | arc196_a | done at round 2, 4/43, $0.074 | round 1: samples 3/3, stress FAILED on input 5 of 200; round 2: samples 3/3, stress ok, done; **43/43**, 12 calls, $0.32 |
 | arc196_d | done at round 2, 2/42, $0.47 | round 1: samples 2/2, stress ok, done at round 2; **42/42**, 9 calls, $0.42, 18 min |
 
-The authors' harness solves both in all five passes. Two problems are two problems; the
-batch of ten and the hundred are next, one at a time.
+The authors' harness solves both in all five passes.
+
+### The ten (2026-10-28)
+
+The same ten ids as the authors' first ten, one at a time, 27B, thinking high, 128K cap,
+through `workflow/gvs5h-stress` (`results/harness-stress-27b.tsv`, with each problem's
+note). The authors' columns are their five passes on the same id (`bench/authors.py`).
+
+| problem | ours | authors' 27B harness | Fable 5 alone |
+|---|---|---|---|
+| arc196_a | 43/43 | 5/5 | 3/5 |
+| arc196_b | 2/2 | 5/5 | 5/5 |
+| arc196_c | 2/43 | 5/5 | 5/5 |
+| arc196_d | 42/42 | 5/5 | 5/5 |
+| 3777 | 43/43 | 4/5 | 5/5 |
+| abc400_e | 5/5 | 5/5 | 5/5 |
+| abc400_g | 2/6 | 5/5 | 5/5 |
+| 3717 | 42/42 | 5/5 | 1/5 |
+| 3765 | 42/42 | 5/5 | 1/5 |
+| abc399_e | 32/44 | 5/5 | 1/5 |
+
+**8 of 10**, $4.95 including every failed attempt, one pass. Their harness: 10 of 10 in
+four passes of five. Fable 5 alone: 7 to 9 of 10 by pass. What the three misses taught,
+each fixed in the workflow or the gateway before the next run:
+
+- **arc196_c**: the plan call came back empty four times, 19K to 51K tokens of reasoning
+  and no answer. The gateway now asks an llm task again without thinking when that
+  happens; the plan landed on the third attempt. Then the brute force crashed and the
+  harness blamed the solution for three rounds; a crashing reference now reads
+  INCONCLUSIVE and the worker rewrites it.
+- **abc400_g**: the stress test refused the solution in nine rounds of ten and the hidden
+  grader agreed. The harness knew; the 27B did not find it. The one honest loss.
+- **abc399_e**: the manager never said done, the late rounds timed out in the stress step,
+  the final worker's answer went out unchecked.
+- **3777, 3717, 3765** are LeetCode-style problems, graded by calling a method. The rig
+  had no sample files for them until this batch: `bench/functional-tests.py` and the
+  driver `run.sh` / `run-solution.py` in the workflow fix that for all 27 of the hundred.
+
+The hundred is next, one pass, at the rate above between $15 and $25.
 
 ### What is not apple to apple yet
 

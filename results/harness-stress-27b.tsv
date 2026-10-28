@@ -1,2 +1,11 @@
-arc196_a	done	3/3	43/43	12 calls $0.32
-arc196_d	done	2/2	42/42	9 calls $0.42
+problem	solved	hidden tests	calls	cost	note
+arc196_a	yes	43/43	12	$0.32	stress caught round 1, done round 3
+arc196_b	yes	2/2	9	$0.26	
+arc196_c	no	2/43	-	$1.32	three attempts: plan empty twice (thinking on, finish=stop), third run stopped at round 4 after a crashed brute force poisoned the verdicts
+arc196_d	yes	42/42	9	$0.42	
+3777	yes	43/43	17	$0.66	first run blind (no functional samples yet) still 43/43 for $0.44; rerun on the functional path $0.22, done round 5
+abc400_e	yes	5/5	8	$0.03	
+abc400_g	no	2/6	39	$1.41	stress refused 9 rounds of 10; the hidden grader agreed
+3717	yes	42/42	8	$0.07	functional path, 4 min
+3765	yes	42/42	8	$0.07	functional path, 3 min
+abc399_e	no	32/44	35	$0.39	never done; late rounds timed out in the stress step
