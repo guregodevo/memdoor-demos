@@ -18,6 +18,8 @@ Every number in the top-level README traces to a file here.
   digests, sample and stress verdicts, `brute.py`, `gen.py`, `solution.py` and
   `test-status.txt`. The problem statements and tests are LiveCodeBench's and are not
   copied; `bench/materialize.py` and `bench/functional-tests.py` rebuild them.
+- `the-ten.svg`: the chart of the above, `bench/chart.py <authors' patched_verdicts.json>`;
+  per problem our result, calls and cost beside the authors' passes, and the totals.
 - `harness-27b-ten-partial.tsv`, `single-27b-thinking-24.tsv`, `*-thinking-off-100.tsv`:
   the earlier arms, kept for the record (the README says what each was).
 

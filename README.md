@@ -133,7 +133,9 @@ note). The authors' columns are their five passes on the same id (`bench/authors
 | 3765 | 42/42 | 5/5 | 1/5 |
 | abc399_e | 32/44 | 5/5 | 1/5 |
 
-**8 of 10**, $4.95 including every failed attempt, one pass. Their harness: 10 of 10 in
+![The ten: ours beside the authors' harness and Fable 5 alone](results/the-ten.svg)
+
+**7 of 10**, $4.95 including every failed attempt, one pass. Their harness: 10 of 10 in
 four passes of five. Fable 5 alone: 7 to 9 of 10 by pass. What the three misses taught,
 each fixed in the workflow or the gateway before the next run:
 
