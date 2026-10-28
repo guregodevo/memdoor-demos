@@ -1,0 +1,8 @@
+- **Core insight (corrected):** For odd N=2m+1, the leftover element is a permanent barrier — elements on opposite sides can never become adjacent. The leftover must be at an odd 1-indexed position f so both sides have even length. Answer = max over odd f of (match_score(left) + match_score(right)).
+- **Even-length theorem:** For any 2k elements, the max non-crossing perfect matching score = (sum of largest k) - (sum of smallest k). This equals total_sum - 2*(sum of k smallest).
+- **Odd-N algorithm:** For each odd f, left part = A[0..f-2] (length f-1), right part = A[f..N-1] (length N-f). Use Fenwick trees (count + sum) with coordinate compression. Binary search on BIT to find k-th smallest, then compute sum of k smallest in O(log N).
+- **Why old formula was wrong:** The "sort and pick 3 candidates" approach ignored the spatial constraint — you can't pair elements from opposite sides of the barrier. Example: N=5, [23,4,25,19,17] gives 25 (not 27) because the best barrier is at position 5 (value 17), pairing left {23,4,25,19} → (19+25)-(4+23)=17+25-4-23... actually left_score=25, right_score=0, total=25.
+- **Fenwick kth implementation:** Standard binary lifting on the BIT tree. Finds smallest index i where prefix_count(i) >= k. Then sum_k_smallest = sum_bit.query(pos-1) + (k - count_bit.query(pos-1)) * val[pos].
+- **Complexity:** O(N log N) for both passes. N up to 3×10^5 → ~5M BIT ops, fine in Python.
+- **Verified:** Sample 1 (N=4, even): 5. Sample 2 (N=7): 14 (f=1 gives 14). Sample 3 (N=5, all 1s): 0. Stress case (N=5, [23,4,25,19,17]): 25. All pass.
+- **Even-N unchanged:** Sort, answer = sum(largest half) - sum(smallest half). O(N log N).

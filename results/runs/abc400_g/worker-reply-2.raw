@@ -1,0 +1,110 @@
+### CODE
+```python
+import sys
+
+def min_penalty(sel1, sel2, g1, g2):
+    if (g1, g2) == (0, 1):
+        v1 = min(t[2] - t[1] for t in sel2)
+        v2 = min(t[1] - t[2] for t in sel1)
+        v3 = min(t[1] - t[3] for t in sel1) + min(t[2] - t[3] for t in sel2)
+        return min(v1, v2, v3)
+    elif (g1, g2) == (0, 2):
+        v1 = min(t[3] - t[1] for t in sel2)
+        v2 = min(t[1] - t[2] for t in sel1) + min(t[3] - t[2] for t in sel2)
+        v3 = min(t[1] - t[3] for t in sel1)
+        return min(v1, v2, v3)
+    elif (g1, g2) == (1, 2):
+        v1 = min(t[2] - t[1] for t in sel1) + min(t[3] - t[1] for t in sel2)
+        v2 = min(t[2] - t[3] for t in sel1)
+        v3 = min(t[3] - t[2] for t in sel2)
+        return min(v1, v2, v3)
+    elif (g1, g2) == (1, 0):
+        v1 = min(t[2] - t[1] for t in sel1)
+        v2 = min(t[1] - t[2] for t in sel2)
+        v3 = min(t[2] - t[3] for t in sel1) + min(t[1] - t[3] for t in sel2)
+        return min(v1, v2, v3)
+    elif (g1, g2) == (2, 0):
+        v1 = min(t[3] - t[1] for t in sel1)
+        v2 = min(t[3] - t[2] for t in sel1) + min(t[1] - t[2] for t in sel2)
+        v3 = min(t[1] - t[3] for t in sel2)
+        return min(v1, v2, v3)
+    elif (g1, g2) == (2, 1):
+        v1 = min(t[3] - t[1] for t in sel1) + min(t[2] - t[1] for t in sel2)
+        v2 = min(t[3] - t[2] for t in sel1)
+        v3 = min(t[2] - t[3] for t in sel2)
+        return min(v1, v2, v3)
+    return 0
+
+def solve():
+    data = sys.stdin.buffer.read().split()
+    idx = 0
+    T = int(data[idx]); idx += 1
+    results = []
+    for _ in range(T):
+        N = int(data[idx]); idx += 1
+        K = int(data[idx]); idx += 1
+        groups = [[], [], []]
+        for i in range(N):
+            x = int(data[idx]); y = int(data[idx+1]); z = int(data[idx+2]); idx += 3
+            if x >= y and x >= z:
+                groups[0].append((x, x, y, z))
+            elif y >= z:
+                groups[1].append((y, x, y, z))
+            else:
+                groups[2].append((z, x, y, z))
+        if K == 0:
+            results.append('0')
+            continue
+        for g in range(3):
+            groups[g].sort(key=lambda t: -t[0])
+        all_m = []
+        for g in range(3):
+            for cake in groups[g]:
+                all_m.append((cake[0], g))
+        all_m.sort(key=lambda t: -t[0])
+        m_sum = 0
+        s = [0, 0, 0]
+        sel_by_group = [[], [], []]
+        for i in range(2 * K):
+            m, g = all_m[i]
+            m_sum += m
+            s[g] += 1
+            sel_by_group[g].append(groups[g][s[g] - 1])
+        odd = [g for g in range(3) if s[g] % 2 == 1]
+        if len(odd) == 0:
+            results.append(str(m_sum))
+            continue
+        g1, g2 = odd[0], odd[1]
+        g3 = 3 - g1 - g2
+        last_g1 = sel_by_group[g1][-1]
+        last_g2 = sel_by_group[g2][-1]
+        best = float('-inf')
+        best = max(best, m_sum - min_penalty(sel_by_group[g1], sel_by_group[g2], g1, g2))
+        if s[g2] < len(groups[g2]):
+            best = max(best, m_sum - last_g1[0] + groups[g2][s[g2]][0])
+        if s[g1] < len(groups[g1]):
+            best = max(best, m_sum - last_g2[0] + groups[g1][s[g1]][0])
+        if s[g3] + 2 <= len(groups[g3]):
+            best = max(best, m_sum - last_g1[0] - last_g2[0] + groups[g3][s[g3]][0] + groups[g3][s[g3]+1][0])
+        if s[g1] + 2 <= len(groups[g1]):
+            best = max(best, m_sum - last_g1[0] - last_g2[0] + groups[g1][s[g1]][0] + groups[g1][s[g1]+1][0])
+        if s[g2] + 2 <= len(groups[g2]):
+            best = max(best, m_sum - last_g1[0] - last_g2[0] + groups[g2][s[g2]][0] + groups[g2][s[g2]+1][0])
+        results.append(str(best))
+    sys.stdout.write('\n'.join(results) + '\n')
+
+solve()
+```
+### NOTES
+- **Core algorithm:** Assign each cake to a group by dominant dimension (X>Y>Z tiebreak). Sort each group by M=max(X,Y,Z) descending. Select top 2K cakes by M. If all group counts are even, answer is sum of M. Otherwise exactly 2 groups are odd; compute 6 options: (1) accept cross-group pair with min penalty, (2-3) single swap of the odd-group's last cake for next cake from the other odd group, (4-6) double-swap both odd-group last cakes for 2 cakes from a target group.
+- **Min penalty formula:** For groups (ga,gb), penalty of pairing A (from ga) with B (from gb) is M_A+M_B - max(X_A+X_B, Y_A+Y_B, Z_A+Z_B). This decomposes into min of 3 terms, each a sum of independent per-cake terms, so the min over all (A,B) pairs = min of the per-term minima.
+- **Why within-group pairing is optimal:** If A,B same group (say X-dom), price = X_A+X_B = M_A+M_B exactly. Cross-group gives M_A+M_B minus a non-negative penalty.
+- **Tie handling at boundary:** Stable sort by -M preserves group order (g0 before g1 before g2). If tie-breaking puts a "wrong" cake in the top 2K, the swap options (opt2/opt3) recover the correct answer since the swapped-in/out cakes have equal M.
+- **Complexity:** O(N log N) per test case (dominated by sort). Sum of N ≤ 10^5, well within time.
+- **Previous wrong approach:** Three-sort-order + adjacent-pair + heap with undo was fundamentally incorrect (the structural lemma that optimal pairing = adjacent pairs in sorted order is false for this max-of-sums objective).
+- **Verified:** Both samples pass. Failing stress case (N=8,K=3) now outputs 81 correctly.
+### NEXT
+- Run stress test (200 random inputs N≤10 vs brute force) to confirm correctness
+- Run timing test on worst-case N=100000, K=50000
+### STATUS
+continue

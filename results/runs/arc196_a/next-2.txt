@@ -1,0 +1,18 @@
+The current sorting-based formula for odd N is **wrong**. The stress test failure (input `5\n23 4 25 19 17`, solution gives 27, correct is 25) exposes a fundamental flaw: for odd N, the leftover element acts as a **permanent barrier** — elements on opposite sides of it can never become adjacent. The correct approach:
+
+**Key theorem (even-length parts):** For any 2k elements in any order, the max non-crossing perfect matching score = (sum of largest k) − (sum of smallest k) of those elements. This is always achievable.
+
+**Correct odd-N algorithm (N = 2m+1):**
+- The leftover (free) element must be at an **odd 1-indexed position** f (so both left and right parts have even length).
+- For each valid f ∈ {1, 3, 5, …, N}: score(f) = match_score(A[1..f−1]) + match_score(A[f+1..N]), where match_score of 2k elements = (sum of largest k) − (sum of smallest k).
+- Answer = max over all valid f.
+
+**Implementation (O(N log N)):**
+1. Coordinate-compress all values.
+2. Use a Fenwick tree (BIT) for counts and sums.
+3. **Left pass:** iterate f = 1, 3, 5, …, N. Maintain a BIT of A[1..f−1]. For each f, compute k=(f−1)/2, find sum of k smallest via BIT (binary-search the k-th position, then sum_below + (k−count_below)×value_at_p). left_score[f] = total_left − 2×sum_k_smallest.
+4. **Right pass:** same from the right. right_score[f] = total_right − 2×sum_k_smallest_right.
+5. Answer = max over odd f of (left_score[f] + right_score[f]).
+6. **Even N:** unchanged — sort, answer = sum(B[N/2:]) − sum(B[:N/2]).
+
+Write `solution.py` implementing this. Verify against all 3 samples and the failing stress input (5 / 23 4 25 19 17 → expected 25).

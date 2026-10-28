@@ -1,0 +1,1 @@
+Write solution.py implementing the full approach: (1) compute prev[j] via endpoint-conflict scan + CDQ for same-direction crossings, (2) build sparse table over prev[], (3) answer each query (L,R) by checking if max(prev[L+1..R]) >= L. Use fast I/O (sys.stdin.buffer), iterative segment tree, and local variable optimization in the CDQ inner loops. Test on both samples.

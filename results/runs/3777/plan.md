@@ -1,0 +1,9 @@
+### PLAN
+The key insight is that for each (alternating_sum, parity) state, we only need to track the maximum product ≤ limit achievable, since all elements are non-negative (0–12), meaning a larger intermediate product always leads to a ≥ final product. The alternating sum is bounded by ±(150×12)=±1800, giving a small DP table of ~3600×2 entries. We process each element left-to-right in a 0/1 fashion (take or skip), updating a 2D DP table (alt_sum → max product, parity → next sign). Starting a new subsequence with element x sets state (x, parity=1) with product x. At the end, the answer is max(dp[k][0], dp[k][1]) if positive, else -1. To avoid reusing an element, we snapshot the DP before updating with the current element.
+
+### TASKS
+- Implement the DP table as a dictionary or 2D array mapping (alt_sum, parity) → max product (≤ limit), initialized to -1 (unreachable). Use an offset of 1800 for the alt_sum index (range [-1800, 1800]).
+- For each element x in nums: (1) snapshot current DP, (2) for every reachable state (s, p) in the snapshot, compute the "take" transition (new_s = s±x, new_p = 1-p, new_prod = prod*x) and update the live DP if new_prod ≤ limit, (3) also handle "start new subsequence with x" as a transition from the empty state, (4) "skip" is implicit (state persists).
+- After processing all elements, read dp[k][0] and dp[k][1]; return the max if it is ≥ 0 (and the subsequence is non-empty, i.e., product > 0 or k==0 and product==0), otherwise return -1.
+- Handle edge cases: x=0 making product 0, k=0 achievable by a 2-element subsequence, all-zero array, limit=1, and early-exit if |k| > sum(nums) (impossible).
+- Test against all three provided samples and a few hand-crafted edge cases (single element, k out of range, limit=1 with all positive nums) to verify correctness before final submission.

@@ -1,0 +1,62 @@
+### CODE
+```python
+from typing import List
+
+class Solution:
+    def maxProduct(self, nums: List[int], k: int, limit: int) -> int:
+        n = len(nums)
+        total = sum(nums)
+        if abs(k) > total:
+            return -1
+        
+        offset = 1800
+        size = 2 * offset + 1
+        # dp[p][s+offset] = max product for alternating sum s with parity p
+        # p=0: next element gets + sign (even index in subsequence)
+        # p=1: next element gets - sign (odd index in subsequence)
+        dp = [[-1] * size for _ in range(2)]
+        
+        for x in nums:
+            old = [row[:] for row in dp]
+            
+            # Start new subsequence with x (x at index 0, contributes +x)
+            if x <= limit:
+                dp[1][x + offset] = max(dp[1][x + offset], x)
+            
+            # Extend existing subsequences (from snapshot to avoid reusing x)
+            for p in range(2):
+                old_row = old[p]
+                for s_idx in range(size):
+                    prod = old_row[s_idx]
+                    if prod < 0:
+                        continue
+                    s = s_idx - offset
+                    if p == 0:
+                        new_s = s + x
+                        new_p = 1
+                    else:
+                        new_s = s - x
+                        new_p = 0
+                    if new_s < -offset or new_s > offset:
+                        continue
+                    new_prod = prod * x
+                    if new_prod > limit:
+                        continue
+                    dp[new_p][new_s + offset] = max(dp[new_p][new_s + offset], new_prod)
+        
+        ans = max(dp[0][k + offset], dp[1][k + offset])
+        return ans if ans >= 0 else -1
+```
+### NOTES
+- **Core DP:** dp[parity][alt_sum+offset] = max product ≤ limit. Parity 0 means next element gets +, parity 1 means next gets -. Offset 1800 covers range [-1800,1800].
+- **Transitions:** For each element x: (1) start new subseq → state (x, parity=1, prod=x); (2) extend from snapshot: if p=0 then new_s=s+x, new_p=1; if p=1 then new_s=s-x, new_p=0; new_prod=prod*x (must be ≤ limit).
+- **0/1 enforcement:** Copy dp to `old` before processing each element; only extend from `old`, write to `dp`. Prevents using same element twice.
+- **Early exit:** If |k| > sum(nums), no subsequence can achieve that alternating sum.
+- **Sentinel:** -1 means unreachable. Product 0 (from a zero element) is valid and distinct from unreachable.
+- **Verified all 3 samples pass:** [1,2,3] k=2 → 6; [0,2,3] k=-5 → -1; [2,2,3,3] k=0 limit=9 → 9.
+- **Complexity:** O(n × 3601 × 2) ≈ 1M ops for n=150. Well within time limits.
+- **Edge cases handled:** x=0 (prod stays 0), k=0 (achievable by [a,a]), all-zero array, limit=1 (only products 0 or 1 allowed), single-element arrays, |k| > sum(nums).
+### NEXT
+- none
+### STATUS
+solved

@@ -1,0 +1,8 @@
+[STRESS: FAILED -- outputs differ on iteration 63. THIS IS A FAILING TEST; fix the bug it exposes. INPUT:]
+[6, 7, 0, 0, 10]
+-4
+47
+--- solution.py output:
+-1
+--- brute.py output:
+0

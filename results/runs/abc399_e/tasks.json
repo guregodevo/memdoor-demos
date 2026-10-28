@@ -1,0 +1,4 @@
+- [done] Build the per-character mapping from S to T; if any character in S maps to two different characters in T, immediately output -1.
+- [done] Construct the functional graph on the 26 lowercase letters using only edges where f(c) ≠ c; identify all cycles and count total edges |E| and number of cycles C.
+- [todo] Verify and finalize the impossibility condition in `solution.py`: answer is -1 iff (cycle exists) AND (all 26 letters in S) AND (all 26 letters are in cycles, no tree nodes). Otherwise answer is |E| + C. Ensure the code is syntactically complete and handles this correctly.
+- [todo] Re-run all 4 samples, then run 50 targeted random tests (N up to 8, biased toward S using all/most of 26 letters and containing cycles) against a correct brute-force reference to confirm no off-by-one or missing-edge bugs.

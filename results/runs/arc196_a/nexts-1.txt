@@ -1,0 +1,3 @@
+- Run the solution against all 3 provided samples to confirm output matches
+- Stress test with brute force for N ≤ 8 (enumerate all deletion sequences via DP or recursion) to catch any edge cases
+- If stress test passes, submit

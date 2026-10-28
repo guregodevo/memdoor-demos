@@ -1,0 +1,87 @@
+### CODE
+```python
+from typing import List
+from collections import deque
+
+class Solution:
+    def minimumCost(self, nums: List[int], cost: List[int], k: int) -> int:
+        n = len(nums)
+        if n == 1:
+            return (nums[0] + k) * cost[0]
+        
+        # Inclusive prefix sums
+        pN = [0] * n
+        pC = [0] * n
+        pN[0] = nums[0]
+        pC[0] = cost[0]
+        for i in range(1, n):
+            pN[i] = pN[i-1] + nums[i]
+            pC[i] = pC[i-1] + cost[i]
+        
+        # Base: dp[1][r] = (pN[r] + k) * pC[r]
+        dp_prev = [0] * n
+        for r in range(n):
+            dp_prev[r] = (pN[r] + k) * pC[r]
+        
+        best = dp_prev[n-1]
+        
+        # For j >= 2, use CHT with deque
+        # Line: y = m*x + b where m = -pC[prev], b = dp[j-1][prev]
+        # Query at x = pN[r] + k*j
+        # Slopes strictly decreasing, queries strictly increasing → monotone CHT
+        
+        for j in range(2, n + 1):
+            dp_cur = [0] * n
+            dq = deque()  # stores (m, b)
+            
+            for r in range(j - 1, n):
+                # Add line for prev = r-1 (the new split point)
+                prev = r - 1
+                m_new = -pC[prev]
+                b_new = dp_prev[prev]
+                
+                # Add line with decreasing slope
+                while len(dq) >= 2:
+                    m_a, b_a = dq[-2]
+                    m_b, b_b = dq[-1]
+                    # Check if line b is redundant
+                    if (b_new - b_a) * (m_a - m_b) <= (b_b - b_a) * (m_a - m_new):
+                        dq.pop()
+                    else:
+                        break
+                dq.append((m_new, b_new))
+                
+                # Query at x = pN[r] + k*j
+                x = pN[r] + k * j
+                while len(dq) >= 2:
+                    m0, b0 = dq[0]
+                    m1, b1 = dq[1]
+                    if m0 * x + b0 >= m1 * x + b1:
+                        dq.popleft()
+                    else:
+                        break
+                
+                m_best, b_best = dq[0]
+                dp_cur[r] = (pN[r] + k * j) * pC[r] + m_best * x + b_best
+            
+            dp_prev = dp_cur
+            if dp_cur[n-1] < best:
+                best = dp_cur[n-1]
+        
+        return best
+```
+### NOTES
+- **Problem structure:** Cost of i-th subarray [l..r] is (pN[r] + k*i) * (pC[r] - pC[l-1]). DP over number of subarrays j and right endpoint r.
+- **CHT derivation:** dp[j][r] = (pN[r]+k*j)*pC[r] + min_prev(dp[j-1][prev] - (pN[r]+k*j)*pC[prev]). Line: m=-pC[prev], b=dp[j-1][prev], query x=pN[r]+k*j.
+- **Monotonicity guarantees:** pC strictly increasing → slopes m=-pC[prev] strictly decreasing as prev grows. pN strictly increasing and r increases → x strictly increasing. Both conditions needed for O(1) amortized deque CHT.
+- **Add-line condition (verified algebraically):** With m_a > m_b > m_new, pop b if (b_new - b_a)*(m_a - m_b) <= (b_b - b_a)*(m_a - m_new). This is equivalent to intersection(a,b) >= intersection(b,new).
+- **Query condition:** Pop front while front line value >= second line value at current x. Optimal line moves front→back as x increases.
+- **Indexing:** For j subarrays, r starts at j-1 (need at least j elements). prev = r-1 is added before querying. dp[j-1][prev] valid since prev >= j-2.
+- **Sample 1 verified by hand:** dp[1]=[16,50,144], dp[2][2]=110, dp[3][2]=118, answer=110. ✓
+- **No overflow:** Python arbitrary-precision integers handle all values (max ~1000*1000*1000^2 = 10^12 range, well within Python int).
+- **Complexity:** O(n^2) total (n values of j, up to n-r queries per j). Space O(n) with rolling array.
+### NEXT
+- Run grade.py to confirm both samples pass (110, 985)
+- Brute-force cross-check on random n≤6 inputs to catch edge cases
+### STATUS
+continue

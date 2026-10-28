@@ -1,0 +1,107 @@
+### CODE
+```python
+from typing import List
+
+class BIT:
+    __slots__ = ('size', 'tree')
+    def __init__(self, size):
+        self.size = size
+        self.tree = [0] * (size + 1)
+    
+    def update(self, idx, delta):
+        while idx <= self.size:
+            self.tree[idx] += delta
+            idx += idx & (-idx)
+    
+    def query(self, idx):
+        s = 0
+        while idx > 0:
+            s += self.tree[idx]
+            idx -= idx & (-idx)
+        return s
+    
+    def kth(self, k):
+        pos = 0
+        bit_mask = 1 << (self.size.bit_length() - 1)
+        while bit_mask:
+            next_pos = pos + bit_mask
+            if next_pos <= self.size and self.tree[next_pos] < k:
+                pos = next_pos
+                k -= self.tree[next_pos]
+            bit_mask >>= 1
+        return pos + 1
+
+class Solution:
+    def minOperations(self, nums: List[int], x: int, k: int) -> int:
+        n = len(nums)
+        m = n - x + 1
+        
+        sorted_vals = sorted(set(nums))
+        val_to_idx = {v: i + 1 for i, v in enumerate(sorted_vals)}
+        comp_size = len(sorted_vals)
+        
+        count_bit = BIT(comp_size)
+        sum_bit = BIT(comp_size)
+        
+        for i in range(x):
+            idx = val_to_idx[nums[i]]
+            count_bit.update(idx, 1)
+            sum_bit.update(idx, nums[i])
+        
+        cost = [0] * m
+        
+        def compute_cost():
+            median_idx = count_bit.kth(x // 2 + 1)
+            median_val = sorted_vals[median_idx - 1]
+            count_below = count_bit.query(median_idx - 1)
+            sum_below = sum_bit.query(median_idx - 1)
+            count_at = count_bit.query(median_idx) - count_below
+            sum_at = sum_bit.query(median_idx) - sum_below
+            count_above = x - count_below - count_at
+            total_sum = sum_bit.query(comp_size)
+            sum_above = total_sum - sum_below - sum_at
+            return median_val * count_below - sum_below + sum_above - median_val * count_above
+        
+        cost[0] = compute_cost()
+        
+        for i in range(1, m):
+            ri = val_to_idx[nums[i - 1]]
+            count_bit.update(ri, -1)
+            sum_bit.update(ri, -nums[i - 1])
+            ai = val_to_idx[nums[i + x - 1]]
+            count_bit.update(ai, 1)
+            sum_bit.update(ai, nums[i + x - 1])
+            cost[i] = compute_cost()
+        
+        INF = float('inf')
+        prev = [0] * (n + 1)
+        
+        for j in range(1, k + 1):
+            curr = [INF] * (n + 1)
+            for i in range(1, n + 1):
+                curr[i] = curr[i - 1]
+                if i >= x:
+                    v = prev[i - x] + cost[i - x]
+                    if v < curr[i]:
+                        curr[i] = v
+            prev = curr
+        
+        return prev[n]
+```
+
+### NOTES
+- **Core decomposition:** (1) compute cost[i] = sum of |nums[j] - median| for each window of size x starting at i, (2) pick k non-overlapping windows via DP minimizing total cost.
+- **Window cost via BIT + coordinate compression:** Compress all values to [1, comp_size]. Maintain two Fenwick trees (counts and sums). For each window, find the (x//2+1)-th smallest via BIT kth() in O(log n). Cost = median*count_below - sum_below + sum_above - median*count_above. Sliding: remove one, add one, recompute. Total O(n log n).
+- **Why lower/upper median doesn't matter:** For even x, any value between the two middle elements gives the same sum of absolute deviations, so using the (x//2+1)-th smallest is always correct.
+- **DP:** dp[i][j] = min cost to place j non-overlapping x-windows in first i positions. Recurrence: dp[i][j] = min(dp[i-1][j], dp[i-x][j-1] + cost[i-x]). Rolling arrays over j keep space O(n). Since all costs are non-negative, "at least k" = "exactly k".
+- **Complexity:** O(n log n + n·k) time, O(n) space. For n=10^5, k=15: well within limits.
+- **Verified both samples:** Example 1 → 8, Example 2 → 3.
+- **Edge cases handled:** x=n (m=1, k must be 1 by constraint), all same values (cost=0), negative values (coordinate compression handles them), k=1.
+
+### NEXT
+- Run grader to confirm both samples pass
+- Stress test with small random inputs against brute force
+- Check hidden test performance (n=10^5 worst case)
+
+### STATUS
+continue

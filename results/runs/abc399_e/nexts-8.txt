@@ -1,0 +1,2 @@
+- Run the stress test: generate 200 random inputs (N≤8), run both solution.py and brute.py, compare outputs.
+- If any mismatch, investigate and fix solution.py.

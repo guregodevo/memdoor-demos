@@ -1,0 +1,34 @@
+### STATUS
+continue
+### NEXT
+Replace solution.py entirely with the following algorithm and verify it passes both samples and the stress test (especially the previously failing case: N=8,K=3 with cakes (8,10,5),(14,0,7),(15,10,20),(2,4,1),(0,1,15),(7,5,5),(9,15,12),(1,4,7) which must output 81).
+
+ALGORITHM:
+1. For each cake i, compute M_i = max(X_i,Y_i,Z_i). Assign to group 0 if X_i==M_i, else group 1 if Y_i==M_i, else group 2. (Tie-break: X>Y>Z.)
+2. Sort each group by M descending.
+3. 3-way merge to select top 2K cakes by M. Record per-group counts s[0],s[1],s[2] and total m_sum.
+4. If all s[g] even: answer = m_sum.
+5. Otherwise exactly two groups g1,g2 are odd (g3 is even). Compute:
+   - opt1 = m_sum - min_penalty(sel_g1, sel_g2, g1, g2)  [accept cross-group pair]
+   - opt2 = m_sum - M(sel_g1_last) + M(next_unselected_g2)  [swap, if exists]
+   - opt3 = m_sum - M(sel_g2_last) + M(next_unselected_g1)  [swap, if exists]
+   - opt4 = m_sum - M(sel_g1_last) - M(sel_g2_last) + M(next1_g3) + M(next2_g3)  [double-swap to g3]
+   - opt5 = m_sum - M(sel_g1_last) - M(sel_g2_last) + M(next1_g1) + M(next2_g1)  [double-swap to g1]
+   - opt6 = m_sum - M(sel_g1_last) - M(sel_g2_last) + M(next1_g2) + M(next2_g2)  [double-swap to g2]
+   answer = max of all feasible options.
+
+MIN_PENALTY(sel1, sel2, g1, g2) uses the formula:
+- (0,1): min( min_y(Y_y-X_y), min_x(X_x-Y_x), min_x(X_x-Z_x)+min_y(Y_y-Z_y) )
+- (0,2): min( min_y(Z_y-X_y), min_x(X_x-Y_x)+min_y(Z_y-Y_y), min_x(X_x-Z_x) )
+- (1,2): min( min_x(Y_x-X_x)+min_y(Z_y-X_y), min_x(Y_x-Z_x), min_y(Z_y-Y_y) )
+where x ranges over sel1 (group g1 cakes) and y over sel2 (group g2 cakes). Each min is over the stored (M,X,Y,Z) tuples.
+
+Write the complete solution.py, run it against both samples via grade.py, and stress-test against brute.py on 200 random inputs (N up to 10, K up to N//2, values 0..50).
+
+### TASKS
+- [done] Implement fast input parsing for T test cases using sys.stdin.buffer
+- [done] Implement the core subroutine select_k_nonadjacent (abandoned - wrong approach)
+- [done] Implement the main solver per test case with three sort keys (abandoned - wrong approach)
+- [done] Write the I/O wrapper (abandoned - incomplete)
+- [todo] Implement the corrected algorithm: group-by-dominant-dim + top-2K-M selection + O(1) parity adjustment with cross-group penalty computation (as detailed in NEXT above)
+- [todo] Verify against both samples and 200-input stress test (brute-force reference)

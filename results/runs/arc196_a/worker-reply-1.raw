@@ -1,0 +1,44 @@
+### CODE
+```python
+import sys
+
+def solve():
+    data = sys.stdin.buffer.read().split()
+    N = int(data[0])
+    A = list(map(int, data[1:N+1]))
+    B = sorted(A)
+    
+    # Prefix sums: PS[i] = sum of B[0..i-1], PS[0] = 0
+    PS = [0] * (N + 1)
+    for i in range(N):
+        PS[i+1] = PS[i] + B[i]
+    
+    if N % 2 == 0:
+        m = N // 2
+        ans = PS[N] - 2 * PS[m]
+    else:
+        m = N // 2  # N = 2m+1
+        C1 = (PS[N] - 2 * PS[m+1]) + B[m-1]
+        C2 = PS[N] - PS[m+1] - PS[m]
+        C3 = (PS[N] - 2 * PS[m]) - B[m+1]
+        ans = max(C1, C2, C3)
+    
+    print(ans)
+
+solve()
+```
+### NOTES
+- **Core insight:** For even N=2m, max score = sum(largest m) − sum(smallest m) after sorting. For odd N=2m+1, max of 3 candidates (remove (m-1)-th, m-th, or (m+1)-th smallest from sorted array).
+- **Why it works:** Any pairing of 2m elements gives total = sum("larger-in-pair") − sum("smaller-in-pair"). To maximize, make the m largest all be "larger" and m smallest all be "smaller". A non-crossing S-L matching always exists (proved by induction: pair position 1 with the first return-to-zero of the prefix balance, recurse on interior and exterior).
+- **Odd-N derivation:** Removing B[i] leaves 2m elements. For i<m-1, score is non-increasing in i (so best at i=m-1). For i>m+1, score is non-increasing in i (so best at i=m+1). Hence only i∈{m-1,m,m+1} matter.
+- **Verified formulas:** C1=(PS[N]−2·PS[m+1])+B[m−1], C2=PS[N]−PS[m+1]−PS[m], C3=(PS[N]−2·PS[m])−B[m+1]. All checked against samples and hand-computed examples.
+- **Arithmetic check on sample 2:** N=7, sorted=[1,1,2,3,4,5,9], PS=[0,1,2,4,7,11,16,25], m=3. C1=(25−14)+2=13, C2=25−7−4=14, C3=(25−8)−4=13. Max=14. ✓
+- **Edge cases:** N=2 gives B[1]−B[0]. All-equal gives 0. Python handles large ints natively (sums up to ~3×10^14).
+- **Complexity:** O(N log N) for sort, O(N) for prefix sums, O(1) for answer. Well within limits for N=3×10^5 in Python.
+- **Earlier arithmetic error corrected:** Initially miscomputed sample 1 as 5 via wrong intermediate (3+4)−(1+2)=4 for [1,2,3,4] but the actual sample [1,2,3,5] gives (3+5)−(1+2)=5. No formula issue.
+### NEXT
+- Run the solution against all 3 provided samples to confirm output matches
+- Stress test with brute force for N ≤ 8 (enumerate all deletion sequences via DP or recursion) to catch any edge cases
+- If stress test passes, submit
+### STATUS
+continue

@@ -1,0 +1,1 @@
+[STRESS: ok -- solution.py matched brute.py on 200 small random inputs.]

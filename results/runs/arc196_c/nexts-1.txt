@@ -1,0 +1,3 @@
+- Run solution against all three public samples and the benchmark grader to confirm.
+- If a sample fails, the candidate formula needs re-derivation; in that case write a brute-force (N<=5) enumerator to generate ground-truth counts and fit the exact formula.
+

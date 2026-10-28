@@ -1,0 +1,117 @@
+### CODE
+```python
+import sys
+import heapq
+
+def select_k_nonadjacent(vals, K):
+    """Select exactly K non-adjacent elements from vals to maximize sum."""
+    n = len(vals)
+    if K == 0:
+        return 0
+    
+    max_nodes = n + K + 5
+    prev_arr = [0] * max_nodes
+    nxt_arr = [0] * max_nodes
+    val_arr = [0] * max_nodes
+    deleted = [False] * max_nodes
+    
+    for i in range(n):
+        val_arr[i] = vals[i]
+        prev_arr[i] = i - 1 if i > 0 else -1
+        nxt_arr[i] = i + 1 if i < n - 1 else -1
+    
+    heap = [(-vals[i], i) for i in range(n)]
+    heapq.heapify(heap)
+    
+    ans = 0
+    next_id = n
+    heappop = heapq.heappop
+    heappush = heapq.heappush
+    
+    for _ in range(K):
+        while True:
+            neg_v, m = heappop(heap)
+            if not deleted[m]:
+                break
+        
+        ans += val_arr[m]
+        
+        L = prev_arr[m]
+        R = nxt_arr[m]
+        
+        deleted[m] = True
+        if L != -1:
+            deleted[L] = True
+        if R != -1:
+            deleted[R] = True
+        
+        LL = prev_arr[L] if L != -1 else -1
+        RR = nxt_arr[R] if R != -1 else -1
+        
+        if L != -1 and R != -1:
+            u = next_id
+            next_id += 1
+            val_arr[u] = val_arr[L] + val_arr[R] - val_arr[m]
+            prev_arr[u] = LL
+            nxt_arr[u] = RR
+            if LL != -1:
+                nxt_arr[LL] = u
+            if RR != -1:
+                prev_arr[RR] = u
+            heappush(heap, (-val_arr[u], u))
+        else:
+            if LL != -1:
+                nxt_arr[LL] = RR
+            if RR != -1:
+                prev_arr[RR] = LL
+    
+    return ans
+
+
+def solve_case(N, K, cakes):
+    best = 0
+    for key in range(3):
+        others = [d for d in range(3) if d != key]
+        cakes_sorted = sorted(cakes, key=lambda c: (-c[key], -c[others[0]], -c[others[1]]))
+        
+        vals = []
+        for i in range(N - 1):
+            a, b = cakes_sorted[i], cakes_sorted[i + 1]
+            vals.append(max(a[0] + b[0], a[1] + b[1], a[2] + b[2]))
+        
+        ans = select_k_nonadjacent(vals, K)
+        if ans > best:
+            best = ans
+    
+    return best
+
+
+def main():
+    data = sys.stdin.buffer.read().split()
+    idx = 0
+    T = int(data[idx]); idx += 1
+    results = []
+    for _ in range(T):
+        N = int(data[idx]); K = int(data[idx + 1]); idx += 2
+        cakes = []
+        for i in range(N):
+            x = int(data[idx]); y = int(data[idx + 1]); z = int(data[idx + 2]); idx += 3
+            cakes.append((x, y, z))
+        results.append(str(solve_case(N, K, cakes)))
+    sys.stdout.write('\n'.join(results) + '\n')
+
+main()
+```
+### NOTES
+- **Approach:** For each of 3 sort keys (X, Y, Z descending with tie-breaks), sort cakes, compute N-1 adjacent-pair values (max of coordinate sums), then select K non-adjacent values to maximize sum. Answer is max across 3 sortings.
+- **Select-K-non-adjacent algorithm:** Max-heap + doubly-linked-list with undo trick. Pop max node m, mark m and its neighbors L,R deleted. If both L and R are real (not -1), create virtual node u with val=L+R-m linked between LL and RR. This encodes "undo m, take L and R instead." Boundary: if L or R is -1, just splice the list.
+- **Failing test analysis:** The old code gave 29 instead of 31 for N=3,K=1 with cakes (13,8,13),(15,17,18),(14,10,1). Correct answer: sort by Z desc gives order (15,17,18),(13,8,13),(14,10,1), adjacent values [31,27], pick max=31. The old code likely had a bug in sort order or value computation.
+- **Verified algorithm on small cases:** vals=[5,3,4] K=2 gives 9 (pick idx 0,2); vals=[3,5,3] K=2 gives 6 (pick idx 0,2 via undo); vals=[1,10,1,10,1] K=2 gives 20 (pick idx 1,3).
+- **Complexity:** O(N log N) per sort order, 3 sort orders, sum of N ≤ 10^5. Well within limits.
+- **Array sizing:** max_nodes = n + K + 5 where n = N-1. Each iteration creates at most 1 virtual node, so total nodes ≤ n + K.
+### NEXT
+- Run grader to verify both public samples pass
+- Run stress test (200 random small inputs vs brute force) to confirm correctness
+- Timing check on N=100000, K=50000 worst case
+### STATUS
+continue

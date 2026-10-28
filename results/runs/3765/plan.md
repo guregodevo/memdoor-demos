@@ -1,0 +1,9 @@
+### PLAN
+The key insight is that the cost of the i-th subarray uses the **full prefix sum** of nums up to index r (not just the subarray's own sum), which makes the DP recurrence amenable to Convex Hull Trick optimization. Define dp[i][m] = min cost to partition nums[0..i] into exactly m subarrays; the recurrence expands to a form where, for fixed m, we query a set of lines (one per split point l) at a monotonically increasing x-value. Because both the line slopes (−prefix_cost) and query points (prefix_nums + k·m) are monotone, a deque-based CHT reduces each layer from O(n²) to O(n), giving an overall O(n²) solution. The final answer is min over all m of dp[n-1][m].
+
+### TASKS
+- Compute prefix sums `P[i] = sum(nums[0..i])` and `C[i] = sum(cost[0..i])`; set up the 2-D DP table `dp[i][m]` (size n × n) initialized to infinity, with base case `dp[i][1] = (P[i] + k) * C[i]`.
+- Implement a monotone-convex-hull (deque) CHT class supporting `add_line(slope, intercept)` and `query(x) -> min(slope*x + intercept)`, where slopes are inserted in strictly decreasing order and queries arrive in strictly increasing order; use the standard "pop back on redundancy / pop front on obsolescence" logic with cross-product comparison (avoid floating point).
+- For each layer m = 2..n, iterate i from m-1 to n-1: before computing dp[i][m], insert the line for split-point l = i-1 (slope = −C[l-1], intercept = dp[l-1][m-1]) into the CHT, then query at x = P[i] + k*m to get dp[i][m] = (P[i] + k*m)*C[i] + CHT.query(x).
+- After filling the DP table, return `min(dp[n-1][m] for m in 1..n)` as the answer; handle the single-element edge case (n=1) explicitly.
+- Verify the implementation against both provided samples (expected 110 and 985) and confirm no off-by-one errors in the l-range (l must be ≥ m-1 so the first m−1 subarrays are non-empty).

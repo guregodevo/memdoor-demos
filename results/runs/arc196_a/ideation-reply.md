@@ -1,0 +1,23 @@
+### NOTES
+
+**Core difficulty:** The problem asks for a maximum-weight non-crossing matching on a sequence of N points (where weight of pair (i,j) is |A_i - A_j|). In general, maximum-weight non-crossing matching is an O(N^2) or O(N^3) DP problem (similar to RNA folding or optimal binary search tree). With N up to 3×10^5, we need a near-linear-time solution, which requires a structural insight about what the optimal matching looks like.
+
+The key structural insight is: the optimal total score depends only on the *multiset* of values, not their order. Specifically, the maximum achievable score equals (sum of the ⌊N/2⌋ largest values) minus (sum of the ⌊N/2⌋ smallest values) when N is even. This is because (a) among all perfect matchings (ignoring the non-crossing constraint), pairing the smallest half with the largest half maximizes the sum of absolute differences — a standard rearrangement inequality argument; and (b) a non-crossing matching achieving this optimal value always exists in the original positional order (can be shown by a stack/greedy argument: color each element "S" or "L" based on rank, then match using a stack — when you see an L and the stack top is S, pop and match; the non-crossing property is guaranteed by the stack structure).
+
+For odd N = 2m+1, one element is left unmatched. The unmatched element must be "near the median" in value. Specifically, only 3 candidates for the unmatched element need to be checked: the (m-1)-th, m-th, and (m+1)-th smallest elements (0-indexed). The intuition is that removing any element from the small half and re-pairing would lose more than removing a central element, and similarly for the large half.
+
+**Pitfalls:**
+- The proof that a non-crossing matching exists for the small-large pairing is non-trivial. A counterexample intuition might arise: if all "S" elements are on the left and all "L" elements are on the right, the natural matching is crossing. But the stack argument resolves this: you process left-to-right, push S's, and when you encounter an L, you pop the most recent unmatched S and form a pair. This gives a valid non-crossing matching.
+- For odd N, the "3 candidates" claim needs careful justification. The removed element shifts the boundary between "small" and "large" halves, so the exact indices matter.
+- Off-by-one errors are very likely in the index arithmetic for the odd case.
+- Integer overflow is not an issue in Python, but the values can be up to 10^9 and N up to 3×10^5, so the answer can be up to ~1.5×10^14, which fits in a 64-bit integer.
+
+### NEXT
+
+- **Approach 1 (Primary — Sorting + Closed Form):** Sort the array. For even N, compute sum of upper half minus sum of lower half using prefix sums. For odd N = 2m+1, compute three candidates by virtually removing the element at sorted-index (m-1), m, or (m+1) and computing the small-half-minus-large-half difference on the remaining 2m elements. Return the max. Complexity: O(N log N) for sorting.
+
+- **Approach 2 (Verification — Interval DP):** Define dp[i][j] = max score from subarray A[i..j] (inclusive). Base case: dp[i][i] = 0, dp[i][i+1] = |A[i]-A[i+1]|. Recurrence: dp[i][j] = max over k of (dp[i][k-1] + dp[k+1][j] + |A[i]-A[k]|) where A[i] is matched with A[k] and the middle part is recursively resolved, OR dp[i][j] = max over k of (dp[i+1][k] + dp[k+1][j] + |A[i+1]-A[k+1]|) where we first remove an adjacent pair from within. Actually the correct recurrence is: dp[i][j] = max over valid k of (dp[i+1][k-1] + dp[k+1][j]) + |A[i+1] - A[k]| ... this gets complicated. Simpler: dp[i][j] = max over k (i < k < j, k-i even... no). The cleanest: dp[i][j] considers matching A[i] with some A[k] (where the number of elements between i and k is even, so k-i is odd), giving |A[i]-A[k]| + dp[i+1][k-1] + dp[k+1][j]. Use for brute-force verification on N ≤ 10.
+
+- **Approach 3 (Verification — Randomized Greedy with Stack):** Assign each element a rank after sorting. Mark elements in the lower half as "S" and upper half as "L" (for even N). Process left to right with a stack: push S elements; when encountering an L, pop the top S and form a pair. Verify the total matches Approach 1's answer on random inputs. This confirms the non-crossing matching existence.
+
+- **Approach 4 (Sensitivity Analysis for Odd N):** For odd N, test whether removing elements far from the median (e.g., the minimum or maximum) could ever be optimal. Conjecture: no, because removing an extreme element forces a "wasted" large value into the small half or a "wasted" small value into the large half, strictly decreasing the total. Verify empirically on small random cases that only the 3 central candidates are ever optimal.

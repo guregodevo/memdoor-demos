@@ -1,0 +1,7 @@
+### STATUS
+continue
+### NEXT
+Implement the complete solution in `solution.py`: (1) Read N, S, T from stdin. (2) Build a mapping f from each character in S to the corresponding character in T; if any character in S maps to two different characters in T, print -1 and exit. (3) Build a functional graph on 26 lowercase letters using only edges where f(c) != c. Count total non-trivial edges E and detect all cycles (using standard 3-color DFS or visited-state traversal). Let C = number of cycles. (4) If any cycle has length 26 (i.e., all 26 letters form one cycle), print -1. (5) Otherwise print E + C. Test against all 4 samples.
+### TASKS
+- [todo] Implement the complete solution in `solution.py` reading N, S, T from stdin and printing the answer to stdout.
+- [todo] Run `python3 solution.py` against all four provided samples and the grader script to verify correctness.

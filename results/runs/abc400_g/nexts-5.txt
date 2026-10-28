@@ -1,0 +1,2 @@
+- Run timing check on worst-case (N=100000, K=50000) to confirm < 2s in Python
+- If timing is tight, consider further micro-optimizations (e.g., avoid list comprehension for prv/nxt init, use array module)

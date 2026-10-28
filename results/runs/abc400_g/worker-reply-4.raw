@@ -1,0 +1,88 @@
+### CODE
+```python
+import sys
+
+def solve_case(n, k, cakes):
+    if n > 20:
+        # TODO: efficient algorithm for large N
+        raise NotImplementedError(f"N={n} too large for bitmask DP")
+    
+    # Precompute w[i][j] = max(X_i+X_j, Y_i+Y_j, Z_i+Z_j)
+    w = [[0]*n for _ in range(n)]
+    for i in range(n):
+        xi, yi, zi = cakes[i]
+        for j in range(i+1, n):
+            xj, yj, zj = cakes[j]
+            w[i][j] = w[j][i] = max(xi+xj, yi+yj, zi+zj)
+    
+    size = 1 << n
+    NEG = -10**30
+    dp = [0] * size  # dp[0] = 0
+    
+    for mask in range(1, size):
+        # Only even-popcount masks are valid states
+        if bin(mask).count('1') % 2 != 0:
+            dp[mask] = NEG
+            continue
+        
+        # Find lowest set bit
+        low = mask & (-mask)
+        i = low.bit_length() - 1
+        rest = mask ^ low
+        
+        best = NEG
+        m = rest
+        while m:
+            low_j = m & (-m)
+            j = low_j.bit_length() - 1
+            new_mask = rest ^ low_j
+            val = w[i][j] + dp[new_mask]
+            if val > best:
+                best = val
+            m ^= low_j
+        dp[mask] = best
+    
+    # Answer: max dp[mask] over masks with exactly 2K bits
+    target = 2 * k
+    ans = 0
+    for mask in range(size):
+        if bin(mask).count('1') == target:
+            if dp[mask] > ans:
+                ans = dp[mask]
+    return ans
+
+def main():
+    data = sys.stdin.buffer.read().split()
+    idx = 0
+    T = int(data[idx]); idx += 1
+    results = []
+    for _ in range(T):
+        n = int(data[idx]); k = int(data[idx+1]); idx += 2
+        cakes = []
+        for i in range(n):
+            x = int(data[idx]); y = int(data[idx+1]); z = int(data[idx+2])
+            idx += 3
+            cakes.append((x, y, z))
+        results.append(str(solve_case(n, k, cakes)))
+    sys.stdout.write('\n'.join(results) + '\n')
+
+main()
+```
+
+### NOTES
+- **Approach (current):** Bitmask DP for maximum weight K-matching. dp[mask] = max weight perfect matching on vertex set mask. Transition: pick lowest set bit i, try pairing with each other set bit j. Answer = max dp[mask] over masks with popcount = 2K. Works for N ≤ 20 (2^20 ≈ 1M states × ~20 transitions each ≈ 20M ops).
+- **Why greedy failed:** The "sort by one coordinate + select non-adjacent pairs" approach is provably incorrect. The max(X_i+X_j, Y_i+Y_j, Z_i+Z_j) weight function does not have the property that optimal pairs are adjacent in any single sorted order. Stress test: 6 3 / (8,6,20)(12,15,18)(18,5,7)(9,19,3)(13,20,20)(19,20,0) → greedy gives 109, correct is 114 (optimal pairs: (0,1)+(2,5)+(3,4) = 38+37+39).
+- **Verification:** Manually verified all three stress test cases by computing all pair weights and checking matchings. All match expected outputs (31, 114, 36).
+- **DP correctness:** new_mask = mask - (1<<i) - (1<<j) < mask always holds (removing set bits decreases the integer), so iterating mask in increasing order guarantees dp[new_mask] is already computed.
+- **Large N (unresolved):** For N up to 10^5, bitmask DP is infeasible. Need a fundamentally different approach. Ideas to explore: (1) the weight w(i,j) = max of 3 linear sums might admit a reduction via trying all 2^3=8 sign patterns or threshold approaches; (2) possibly the optimal matching can be found by trying all 3 "dominant coordinate" orderings with a more careful non-greedy (e.g., DP on a compressed structure); (3) min-cost max-flow on a sparse graph (but N=10^5 makes even this hard); (4) parametric search / Lagrangian relaxation.
+- **Performance (small N):** For N=20, the bitmask DP does ~20M inner-loop iterations in Python. Should run in ~5-10 seconds. For stress tests (N≤12), it's instant (<1ms).
+- **I/O:** Standard fast I/O via sys.stdin.buffer.read().split(). Handles T test cases.
+
+### NEXT
+- Design and implement efficient O(N log N) or O(N * polylog N) algorithm for large N (up to 10^5). The bitmask DP is a correctness oracle only.
+- Potential approaches to explore: (a) for each of 3 coordinates d, sort by d and use a DP that accounts for the possibility that other coordinates might dominate; (b) observe that w(i,j) ≥ max(X_i, X_j) + max(X_i, X_j) is not quite right but w(i,j) ≥ max(d_i + d_j) for each d, so lower bounds are easy but upper bounds need care; (c) try a "try all O(N) candidate pairings for the top element" recursive structure with memoization or branch-and-bound.
+- Once large-N algorithm is found, integrate and re-run stress + samples.
+- Stress test more thoroughly with random inputs (N up to 20, K varying) against a brute-force checker.
+
+### STATUS
+continue

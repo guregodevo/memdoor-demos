@@ -1,0 +1,2 @@
+- Run grader: `python3 /Users/gregoryd/memdoor-coder/lcb-bench/grade.py --public abc399_e`
+- Optionally run a targeted stress test with small N (N≤4) where brute force is feasible

@@ -1,0 +1,69 @@
+### CODE
+```python
+import sys
+from collections import deque
+
+def solve():
+    input = sys.stdin.readline
+    N = int(input().strip())
+    S = input().strip()
+    T = input().strip()
+    
+    # First check: is the mapping well-defined?
+    f = {}
+    for s, t in zip(S, T):
+        if s in f:
+            if f[s] != t:
+                print(-1)
+                return
+        else:
+            f[s] = t
+    
+    # BFS on string states
+    if S == T:
+        print(0)
+        return
+    
+    seen = {S}
+    q = deque([(S, 0)])
+    max_depth = 40  # max possible answer is 26+13=39
+    
+    while q:
+        state, dist = q.popleft()
+        if dist >= max_depth:
+            continue
+        for x in range(26):
+            xc = chr(x + ord('a'))
+            if xc not in state:
+                continue
+            for y in range(26):
+                yc = chr(y + ord('a'))
+                if xc == yc:
+                    continue
+                new_state = state.replace(xc, yc)
+                if new_state == T:
+                    print(dist + 1)
+                    return
+                if new_state not in seen:
+                    seen.add(new_state)
+                    q.append((new_state, dist + 1))
+    
+    print(-1)
+
+solve()
+```
+
+### NOTES
+- **Core formula:** Answer = E + C where E = number of non-trivial edges (chars where f(c)≠c) and C = number of cycles in the functional graph. Only impossible case is a single 26-cycle (no free temp letter).
+- **Mapping consistency:** If any char in S maps to two different chars in T, answer is -1. This check must come first.
+- **Cycle detection:** Use 3-color DFS (unvisited/visiting/done) following the functional graph edges. A node hit while "visiting" indicates a cycle; cycle length = path_length - position_of_node_in_path.
+- **Brute force fix:** The stress test failed because brute.py attempted BFS on an input where the S→T mapping is ill-defined (z→g and z→f simultaneously). Added early-exit: check mapping well-definedness BEFORE any BFS. This avoids the timeout.
+- **BFS depth limit:** Set max_depth=40 since max possible answer is 26 edges + 13 cycles = 39. Prevents infinite loops on unsolvable-but-well-defined cases.
+- **Sample verification:** All 4 samples pass (4, 0, -1, 4).
+- **Stress test:** The failing input "7\nxzosssz\ndgsbzmf" has ill-defined mapping (z→g,f; o→s,z; s→b,m,f). With the guard, brute.py prints -1 immediately matching solution.py.
+
+### NEXT
+- Re-run the stress test: `python3 /Users/gregoryd/memdoor-coder/lcb-bench/grade.py --public abc399_e --stress` to confirm all 200 iterations pass with the fixed brute.py.
+
+### STATUS
+continue

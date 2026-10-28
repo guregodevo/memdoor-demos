@@ -1,0 +1,11 @@
+- **Core Insight:** Each cell's tile type determines how the 4 edge-states (left, right, top, bottom) relate. Define h(i,j) = edge state between (i,j) and (i,j+1) on torus, v(i,j) = edge state between (i,j) and (i+1,j).
+- **Type A constraint:** h(i,j-1) XOR h(i,j) = 1 AND v(i-1,j) XOR v(i,j) = 1. (One horizontal + one vertical edge open.)
+- **Type B constraint:** h(i,j-1) = h(i,j), v(i-1,j) = v(i,j), AND h(i,j-1) XOR v(i-1,j) = 1. (Two opposite edges open, one horizontal pair + one vertical pair, exactly one pair active.)
+- **Row system:** For row i, the W horizontal equations form a cycle. Consistent iff row has even A-count. Solution: h(i,j) = R_i XOR (a(i,1)^...^a(i,j)) where R_i is free.
+- **Column system:** Similarly v(i,j) = C_j XOR (a(1,j)^...^a(i,j)) where C_j is free. Consistent iff column has even A-count.
+- **Coupling (B cells only):** Substituting parameterizations into h(i,j-1) XOR v(i-1,j) = 1 gives R_i XOR C_j = 1 XOR row_xor[i][pj] XOR col_xor[qi][j] where pj=(j-1)%W, qi=(i-1)%H.
+- **Bipartite graph:** Nodes R_0..R_{H-1} (left) and C_0..C_{W-1} (right). Each B cell adds edge (R_i, C_j) with weight d. System consistent iff all cycle XORs are 0. Free vars = (H+W) - rank where rank = sum of (comp_size - 1) over non-trivial components.
+- **Answer:** 2^((H+W) - rank) mod 998244353 if consistent and all parities even, else 0.
+- **Complexity:** O(HW) per test case. Sum of HW ≤ 10^6 total.
+- **Verified samples:** Sample 1: one component of 6 nodes, rank=5, free=1, ans=2. Sample 2: row 0 odd A-count, ans=0. Sample 3: one component of 7 nodes, rank=6, free=1, ans=2.
+

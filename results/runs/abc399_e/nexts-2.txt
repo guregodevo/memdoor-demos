@@ -1,0 +1,2 @@
+- Run the solution against all 4 samples to confirm they pass.
+- Run the stress test (200 random inputs vs brute force) to confirm no disagreements.

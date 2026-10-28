@@ -1,0 +1,3 @@
+- Run grader to verify both public samples pass
+- Run stress test (200 random small inputs vs brute force) to confirm correctness
+- Timing check on N=100000, K=50000 worst case

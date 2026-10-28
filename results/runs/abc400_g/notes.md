@@ -1,0 +1,7 @@
+- **Key theorem (proven):** The answer equals the "relaxed" assignment problem: select exactly 2K cakes, assign each to X/Y/Z with even count per dimension, maximize sum of assigned values. Proof: (1) any K-matching → valid assignment of equal value; (2) any valid assignment → pair within groups → matching with ≥ value.
+- **Algorithm:** Sort cakes by m=max(X,Y,Z) descending. Top 2K are selected. Assign each to its argmax dim (ties broken by preferring X>Y>Z). If all dim-counts even, answer=TOTAL. Otherwise exactly two dims (a,b) are odd, third (c) is even. Compute min fix cost over 8 options.
+- **8 fix options (a,b odd, c even):** A1: reassign a→b (min m_i - val_b[i] over dim-a cakes). A2: reassign b→a. A3: remove from a, add unselected to b (min_m_a - max_b_unsel). A4: symmetric. B1: reassign a→c AND b→c. B2: remove one from a and one from b, add two unselected to c. B3: remove from a, add unselected to c, reassign b→c. B4: symmetric.
+- **Ties handled correctly:** If cake has best dims {X,Y}, assigning to X then "reassigning to Y" costs m-Y_i=0. The 8 options with arbitrary tie-breaking always yield the same minimum fix cost.
+- **Complexity:** O(N log N) per test case (dominated by sort). Sum of N ≤ 10^5, T ≤ 1000. Fast in Python.
+- **Verified:** All samples pass. Stress test case (3 inputs) gives 8, 80, 67 correctly.
+- **Old approach (3-sort + non-adjacent selection) is WRONG:** optimal matching can mix winning dimensions across pairs. Abandoned.

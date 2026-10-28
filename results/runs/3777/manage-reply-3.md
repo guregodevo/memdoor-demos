@@ -1,0 +1,18 @@
+### STATUS
+continue
+
+### NEXT
+The set-based DP approach is correct (verified by hand-tracing the failing stress case). Rewrite solution.py completely using a dictionary-of-sets DP where `dp[p][s]` is a `set` of all achievable products (≤ limit) for alternating-sum `s` with next-sign parity `p`. Key points:
+- Initialize `dp = [defaultdict(set) for _ in range(2)]`.
+- For each element x: build `new_states` from (a) starting a new subsequence with x (add x to `new_states[1][x]`) and (b) extending every existing state `(p, s, prod)` to `(1-p, s±x, prod*x)` if `prod*x <= limit` (if x==0, new product is always 0, add 0 once). Then merge `new_states` into `dp`.
+- Early exit: if `abs(k) > sum(nums)`, return -1.
+- Final answer: `max(max(dp[0].get(k, {−1}), max(dp[1].get(k, {−1})))`; if best is -1 return -1 else return best.
+- This correctly handles product-0 subsequences (the bug in the current max-only approach was discarding product 0 when a larger product existed in the same state, losing valid paths that stay within limit).
+
+Stress-failing case to verify: `nums=[6,7,0,0,10], k=-4, limit=47` → answer 0 (subsequence [6,0,0,10] gives alt sum -4, product 0).
+
+### TASKS
+- [done] Implement DP table over (parity, alt_sum) states — initial attempt used max-product only, which is incorrect when limit pruning makes smaller products necessary.
+- [todo] Rewrite solution.py with set-of-products DP (as described in NEXT) to correctly handle cases where a non-max product must survive limit pruning.
+- [todo] Verify solution passes all 3 samples AND the stress case [6,7,0,0,10] k=-4 limit=47 → 0.
+- [todo] Run stress test (200 random inputs vs brute force) to confirm correctness.

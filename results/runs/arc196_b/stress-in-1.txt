@@ -1,0 +1,12 @@
+3
+2 3
+AAB
+ABB
+3 3
+ABA
+BAB
+BAA
+3 3
+BAA
+BBA
+BBB

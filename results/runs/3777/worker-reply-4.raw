@@ -1,0 +1,114 @@
+### CODE
+```python
+from typing import List
+
+class Solution:
+    def maxProduct(self, nums: List[int], k: int, limit: int) -> int:
+        total = sum(nums)
+        if abs(k) > total:
+            return -1
+        
+        # dp_nozero[p] = dict: s -> set of products in [1, limit] (no zeros in subsequence)
+        # dp_over[p] = set of s values (product > limit, no zeros yet)
+        # dp_zero[p] = set of s values (product = 0, at least one zero in subsequence)
+        # p=0: next element gets + sign; p=1: next element gets - sign
+        
+        dp_nozero = [dict(), dict()]
+        dp_over = [set(), set()]
+        dp_zero = [set(), set()]
+        
+        for x in nums:
+            # Snapshot for 0/1 knapsack (avoid reusing current element)
+            snap_nozero = [dict() for _ in range(2)]
+            for p in range(2):
+                for s, prods in dp_nozero[p].items():
+                    snap_nozero[p][s] = frozenset(prods)
+            snap_over = [set(dp_over[p]) for p in range(2)]
+            snap_zero = [set(dp_zero[p]) for p in range(2)]
+            
+            if x > 0:
+                # Start new subsequence with x (x at index 0, +sign, next parity=1)
+                if x <= limit:
+                    dp_nozero[1].setdefault(x, set()).add(x)
+                else:
+                    dp_over[1].add(x)
+                
+                # Extend existing subsequences
+                for p in range(2):
+                    sign = 1 if p == 0 else -1
+                    np = 1 - p
+                    
+                    # From dp_nozero
+                    for s, prods in snap_nozero[p].items():
+                        new_s = s + sign * x
+                        if abs(new_s) > total:
+                            continue
+                        for prod in prods:
+                            new_prod = prod * x
+                            if new_prod <= limit:
+                                dp_nozero[np].setdefault(new_s, set()).add(new_prod)
+                            else:
+                                dp_over[np].add(new_s)
+                    
+                    # From dp_over (product stays > limit)
+                    for s in snap_over[p]:
+                        new_s = s + sign * x
+                        if abs(new_s) <= total:
+                            dp_over[np].add(new_s)
+                    
+                    # From dp_zero (product stays 0)
+                    for s in snap_zero[p]:
+                        new_s = s + sign * x
+                        if abs(new_s) <= total:
+                            dp_zero[np].add(new_s)
+            
+            else:  # x == 0
+                # Start new subsequence [0]: alt_sum=0, product=0, next parity=1
+                dp_zero[1].add(0)
+                
+                # Extend existing (alt_sum unchanged since x=0)
+                for p in range(2):
+                    np = 1 - p
+                    
+                    # From dp_nozero: product becomes 0
+                    for s in snap_nozero[p]:
+                        dp_zero[np].add(s)
+                    
+                    # From dp_over: product becomes 0
+                    for s in snap_over[p]:
+                        dp_zero[np].add(s)
+                    
+                    # From dp_zero: product stays 0
+                    for s in snap_zero[p]:
+                        dp_zero[np].add(s)
+        
+        # Final answer: look up k in both parities
+        best = -1
+        for p in range(2):
+            if k in dp_nozero[p]:
+                best = max(best, max(dp_nozero[p][k]))
+        
+        for p in range(2):
+            if k in dp_zero[p]:
+                best = max(best, 0)
+        
+        return best
+```
+
+### NOTES
+- **Core bug fixed:** The original single-table DP discarded intermediate products exceeding `limit`, losing the path where a later 0 would reduce the product to 0. Example: [3,7,0] with limit=2 gives product 21→0, but 21>2 was discarded.
+- **Three-state DP:** Split into `dp_nozero[p][s]` (set of products in [1,limit]), `dp_over[p][s]` (bool: product>limit, no zeros yet), `dp_zero[p][s]` (bool: product=0). This correctly handles the "over-limit then zero" recovery.
+- **Why sets of products (not just max):** A larger product P2 may exceed limit when multiplied by x, while a smaller P1 doesn't. Example: limit=10, products {3,5}, x=6: 3*6=18>10 but... wait, actually 5*6=30>10 too. But with limit=20: 5*6=30>20 but 3*6=18≤20. So we MUST keep all products, not just the max.
+- **Parity convention:** p=0 means next element gets + sign, p=1 means next gets - sign. Starting with x puts it at index 0 (+), so next parity=1.
+- **Bounds:** alt_sum ∈ [-total, total] where total=sum(nums)≤1800. Early exit if |k|>total.
+- **Complexity:** For each element, iterate over all reachable states. In practice the sets are small (products bounded by limit≤5000, formed from factors 2-11). 150 elements × ~7200 states × small set sizes = fast.
+- **Edge cases handled:** x=0 (product→0, alt_sum unchanged), starting subsequence with x>limit (goes to dp_over), k=0 achievable via [a,a], all-zero array, limit=1.
+- **Stress test verified:** [3,7,10,9,9,0], k=-4, limit=2 → dp_over[0] gets -4 after processing 7 (3-7=-4, product 21>2), then 0 converts it to dp_zero[1] with s=-4. Answer=0. ✓
+
+### NEXT
+- Run against all 3 samples to confirm they still pass
+- Run stress test (200 random inputs vs brute force) to confirm no more mismatches
+- Check performance on worst-case input (150 elements all =12, limit=5000)
+
+### STATUS
+continue

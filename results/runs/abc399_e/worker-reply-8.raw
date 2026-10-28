@@ -1,0 +1,86 @@
+### CODE
+```python
+import sys
+
+def solve():
+    data = sys.stdin.read().split()
+    N = int(data[0])
+    S = data[1]
+    T = data[2]
+    
+    # Step 1: Build mapping f
+    f = [-1] * 26
+    for s, t in zip(S, T):
+        ci = ord(s) - ord('a')
+        ti = ord(t) - ord('a')
+        if f[ci] == -1:
+            f[ci] = ti
+        elif f[ci] != ti:
+            print(-1)
+            return
+    
+    # Step 2: Count non-identity edges
+    E = 0
+    for i in range(26):
+        if f[i] != -1 and f[i] != i:
+            E += 1
+    
+    if E == 0:
+        print(0)
+        return
+    
+    # Step 3: Check for free letter (letter not appearing in S)
+    has_free = any(f[i] == -1 for i in range(26))
+    
+    # Step 4: Count cycles in the functional graph (only non-identity edges)
+    color = [0] * 26  # 0=unvisited, 1=in-path, 2=done
+    C = 0
+    
+    for start in range(26):
+        if color[start] != 0:
+            continue
+        if f[start] == -1 or f[start] == start:
+            color[start] = 2
+            continue
+        
+        path = []
+        cur = start
+        while True:
+            color[cur] = 1
+            path.append(cur)
+            nxt = f[cur]
+            if nxt == -1 or nxt == cur:
+                break
+            if color[nxt] == 2:
+                break
+            if color[nxt] == 1:
+                C += 1
+                break
+            cur = nxt
+        
+        for node in path:
+            color[node] = 2
+    
+    # Step 5: Check impossibility
+    if C > 0 and not has_free:
+        print(-1)
+        return
+    
+    print(E + C)
+
+solve()
+```
+### NOTES
+- **Core formula:** Answer = E + C where E = number of non-identity mappings (f[i]!=-1 and f[i]!=i), C = number of cycles in the functional graph of non-identity edges.
+- **Impossibility:** If C > 0 and all 26 letters appear in S (no free letter to break cycles), answer is -1. A free letter is one not in S (f[i]==-1).
+- **Consistency check:** If any char in S maps to two different chars in T, answer is -1.
+- **Cycle detection:** Standard functional graph traversal with 3-color marking. Only follow edges where f[cur] != -1 and f[cur] != cur. A cycle is detected when we revisit a node with color 1 (in current path).
+- **Sample verification:** All 4 samples pass. Sample 4 (abac→bcba) has a 3-cycle a→b→c→a with free letters, giving 3+1=4. Sample 1 has 4 edges, 0 cycles, giving 4.
+- **Brute force for stress:** BFS over strings (N≤8). State = current string. Transitions = replace all x with y for each distinct char x and letter y≠x. Depth limit 30. State cap 1M. For inconsistent mapping, immediate -1.
+- **Key insight:** Number of distinct characters in the string never increases (replacing x with y removes x, adds y at most). So for N≤8, at most 8 distinct chars throughout.
+- **Stress test plan:** 200 random inputs, N in [1,8], random lowercase strings. Compare solution.py output vs brute.py output.
+### NEXT
+- Run the stress test: generate 200 random inputs (N≤8), run both solution.py and brute.py, compare outputs.
+- If any mismatch, investigate and fix solution.py.
+### STATUS
+continue

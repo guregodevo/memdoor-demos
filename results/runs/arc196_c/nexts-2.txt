@@ -1,0 +1,5 @@
+- Run the brute force solution on small random inputs to verify the logic.
+- Analyze the outputs to find a pattern.
+- Derive the correct combinatorial formula or DP.
+- Implement the efficient solution.
+

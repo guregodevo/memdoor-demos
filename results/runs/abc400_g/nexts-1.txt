@@ -1,0 +1,2 @@
+- Stress-test against brute force on small random inputs (N ≤ 8, K ≤ 4) to verify correctness
+- Run timing check on worst-case input (N=100000, K=50000) to confirm performance

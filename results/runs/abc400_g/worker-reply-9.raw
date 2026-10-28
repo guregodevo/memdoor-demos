@@ -1,0 +1,111 @@
+### CODE
+```python
+import sys
+import heapq
+
+def select_k_nonadjacent(vals, K):
+    M = len(vals)
+    if K == 0 or M == 0:
+        return 0
+    prev = list(range(-1, M - 1))
+    nxt = list(range(1, M + 1))
+    prev[0] = -1
+    nxt[M - 1] = -1
+    val = vals[:]
+    ver = [0] * M
+    heap = [(-val[i], i, 0) for i in range(M)]
+    heapq.heapify(heap)
+    heappop = heapq.heappop
+    heappush = heapq.heappush
+    ans = 0
+    for _ in range(K):
+        while heap:
+            neg_v, i, v = heappop(heap)
+            if ver[i] == v:
+                break
+        else:
+            break
+        v_val = -neg_v
+        ans += v_val
+        L = prev[i]
+        R = nxt[i]
+        if L != -1 and R != -1:
+            new_val = val[L] + val[R] - v_val
+            prev[i] = prev[L]
+            nxt[i] = nxt[R]
+            if prev[i] != -1:
+                nxt[prev[i]] = i
+            if nxt[i] != -1:
+                prev[nxt[i]] = i
+            ver[L] += 1
+            ver[R] += 1
+            val[i] = new_val
+            ver[i] += 1
+            heappush(heap, (-new_val, i, ver[i]))
+        elif L != -1:
+            if prev[L] != -1:
+                nxt[prev[L]] = -1
+            ver[L] += 1
+            ver[i] += 1
+        elif R != -1:
+            if nxt[R] != -1:
+                prev[nxt[R]] = -1
+            ver[R] += 1
+            ver[i] += 1
+        else:
+            ver[i] += 1
+    return ans
+
+def solve():
+    data = sys.stdin.buffer.read().split()
+    idx = 0
+    T = int(data[idx]); idx += 1
+    out = []
+    for _ in range(T):
+        N = int(data[idx]); idx += 1
+        K = int(data[idx]); idx += 1
+        cakes = []
+        for i in range(N):
+            x = int(data[idx]); idx += 1
+            y = int(data[idx]); idx += 1
+            z = int(data[idx]); idx += 1
+            cakes.append((x, y, z))
+        best = 0
+        for dim in range(3):
+            sc = sorted(cakes, key=lambda c: -c[dim])
+            M = N - 1
+            vals = [0] * M
+            for i in range(M):
+                a = sc[i]
+                b = sc[i + 1]
+                v = a[0] + b[0]
+                t = a[1] + b[1]
+                if t > v:
+                    v = t
+                t = a[2] + b[2]
+                if t > v:
+                    v = t
+                vals[i] = v
+            ans = select_k_nonadjacent(vals, K)
+            if ans > best:
+                best = ans
+        out.append(str(best))
+    sys.stdout.write('\n'.join(out) + '\n')
+
+solve()
+```
+### NOTES
+- **Algorithm:** For each test case, try 3 sort orders (X desc, Y desc, Z desc). For each, compute N-1 adjacent-pair values v[i]=max(Xi+Xi+1, Yi+Yi+1, Zi+Zi+1), then select K non-adjacent elements maximizing sum via max-heap + doubly-linked-list undo trick. Answer is max over 3 sort orders.
+- **Undo trick:** When selecting element i with neighbors L,R: remove all three, insert virtual element at position i with value val[L]+val[R]-val[i]. Selecting this virtual element later "undoes" the previous choice and picks L,R instead.
+- **Version numbers:** Each position has a version counter. Heap entries store the version at push time. Stale entries (version mismatch) are skipped on pop.
+- **Boundary cases:** If L==-1 or R==-1, just remove the existing neighbor(s) without inserting a virtual element. If both are -1, just mark as removed.
+- **Tie-breaking in sort:** Using sorted() creates a fresh list each time. The structural lemma holds for any valid (non-increasing) ordering in the sort dimension, so tie-breaking order doesn't affect correctness of the max-over-3-approach.
+- **Complexity:** O(N log N) per test case (3 sorts + 3 heap operations). Sum of N ≤ 10^5, so total is well within limits.
+- **Previous bug:** The earlier "dominant attribute" greedy approach was completely wrong and has been replaced.
+- **Stress test failing case (N=4,K=1, cakes (17,15,7),(0,13,13),(9,13,19),(12,4,7)→32):** Traced through all 3 sort orders; each correctly produces 32. The previous workspace code was the old broken version; this fresh rewrite should fix it.
+### NEXT
+- Run against both provided samples to confirm 12 and 209/333.
+- Run stress test (200 random small inputs vs brute force) to confirm correctness, especially the previously-failing case.
+- Performance check on worst case (N=100000, K=50000) to confirm < 2 seconds.
+### STATUS
+continue

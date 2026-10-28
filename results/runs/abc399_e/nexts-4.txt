@@ -1,0 +1,2 @@
+- Run the grader script to confirm all samples pass
+- Run stress test with a working brute force (fix brute.py if it has a timeout issue for N=8)

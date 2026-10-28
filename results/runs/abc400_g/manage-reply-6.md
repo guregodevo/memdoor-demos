@@ -1,0 +1,97 @@
+### STATUS
+continue
+
+### NEXT
+Completely rewrite solution.py from scratch with the following exact code (do not deviate from it). The previous implementation had a bug in the boundary handling of `select_k_nonadjacent` that caused incorrect answers on some inputs (e.g., N=8,K=3 test where Y-sorted adjacent values [38,34,22,28,30,34,23] should yield 100 but the old code gave less). Use this exact implementation:
+
+```python
+import sys
+import heapq
+
+def select_k_nonadjacent(vals, K):
+    m = len(vals)
+    if K == 0 or m == 0:
+        return 0
+    prv = [i - 1 for i in range(m)]
+    nxt = [i + 1 for i in range(m)]
+    prv[0] = -1
+    nxt[m - 1] = -1
+    cur = vals[:]
+    active = [True] * m
+    heap = [(-vals[i], i) for i in range(m)]
+    heapq.heapify(heap)
+    ans = 0
+    for _ in range(K):
+        while True:
+            neg_v, i = heapq.heappop(heap)
+            if active[i] and cur[i] == -neg_v:
+                break
+        v = -neg_v
+        ans += v
+        L = prv[i]
+        R = nxt[i]
+        if L != -1 and R != -1:
+            LL = prv[L]
+            RR = nxt[R]
+            cur[i] = cur[L] + cur[R] - v
+            prv[i] = LL
+            nxt[i] = RR
+            if LL != -1:
+                nxt[LL] = i
+            if RR != -1:
+                prv[RR] = i
+            active[L] = False
+            active[R] = False
+            heapq.heappush(heap, (-cur[i], i))
+        elif L != -1:
+            LL = prv[L]
+            if LL != -1:
+                nxt[LL] = -1
+            active[L] = False
+            active[i] = False
+        elif R != -1:
+            RR = nxt[R]
+            if RR != -1:
+                prv[RR] = -1
+            active[R] = False
+            active[i] = False
+        else:
+            active[i] = False
+    return ans
+
+def solve():
+    data = sys.stdin.buffer.read().split()
+    idx = 0
+    T = int(data[idx]); idx += 1
+    out = []
+    for _ in range(T):
+        N = int(data[idx]); K = int(data[idx+1]); idx += 2
+        cakes = []
+        for i in range(N):
+            x = int(data[idx]); y = int(data[idx+1]); z = int(data[idx+2]); idx += 3
+            cakes.append((x, y, z))
+        best = 0
+        for key in range(3):
+            sc = sorted(cakes, key=lambda c: c[key], reverse=True)
+            vals = [max(sc[i][0]+sc[i+1][0], sc[i][1]+sc[i+1][1], sc[i][2]+sc[i+1][2]) for i in range(N-1)]
+            a = select_k_nonadjacent(vals, K)
+            if a > best:
+                best = a
+        out.append(best)
+    sys.stdout.write('\n'.join(map(str, out)) + '\n')
+
+solve()
+```
+
+Key correctness points to verify after writing:
+1. The "undo" merge (both neighbors exist): new value at i = cur[L]+cur[R]-v, link i between LL and RR, deactivate L and R, push new heap entry for i.
+2. Boundary cases (one neighbor is -1): deactivate i and the existing neighbor, update the remaining endpoint pointer, do NOT push a new heap entry.
+3. Stale heap entries are skipped via `active[i] and cur[i] == -neg_v`.
+After writing, run both samples AND the stress input (the one from the failed iteration: N=8,K=3 with cakes (9,7,12)(14,19,12)(18,2,13)(1,2,10)(9,15,9)(14,3,16)(2,19,12)(16,3,2)) to confirm output is 100.
+
+### TASKS
+- [done] Implement fast input parsing for T test cases.
+- [done] Implement the core subroutine `select_k_nonadjacent(vals, K)`.
+- [done] Implement the main solver per test case (3 sortings + max).
+- [done] Write the I/O wrapper.
+- [todo] Rewrite solution.py with corrected boundary handling in `select_k_nonadjacent` (use exact code provided in NEXT); verify against both samples AND the stress-failing input (N=8,K=3, expected answer 100).

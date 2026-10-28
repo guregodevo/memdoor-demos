@@ -1,0 +1,8 @@
+- **Core reduction:** The problem maps to a functional graph on 26 letters. Each char c in S maps to f(c) in T. Must be a valid function (consistent mapping), else -1.
+- **Minimum operations formula:** Answer = E + C, where E = number of non-identity edges (f(c)≠c and f(c) defined), C = number of directed cycles in the non-identity subgraph. Each tree edge costs 1 op; each cycle of length k costs k+1 ops (needs one temporary).
+- **Impossibility condition:** Answer is -1 iff (C > 0) AND no valid temporary exists. A letter i is a valid temporary iff f[i]==-1 (absent from S), f[i]==i (identity), or f[i]≠-1 and f[i]≠i and not in_cycle[i] (tree node, processable before cycles). Equivalently: -1 iff all 26 letters are in cycles.
+- **Cycle detection:** Standard DFS with 3-color marking on the functional graph. Follow edges only for non-identity, defined mappings. If we land on a color-1 node, a cycle is found starting at that node in the current path.
+- **Tree node ordering:** Tree nodes must be processed before cycles (they point toward cycles). After processing, tree nodes become free temporaries. This is why tree nodes count as valid temporaries.
+- **Sample verification:** All 4 samples pass. Sample 1: E=4, C=0 → 4. Sample 4: E=3, C=1 → 4. Sample 3: inconsistent mapping → -1.
+- **Stress test note:** The iteration-16 "failure" was brute.py crashing, not solution.py. The input had inconsistent mapping (b→a and b→s), correctly giving -1.
+- **Complexity:** O(N + 26) time, O(26) space. Well within limits for N up to 2×10^5.

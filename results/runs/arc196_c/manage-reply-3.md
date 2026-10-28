@@ -1,0 +1,333 @@
+### STATUS
+continue
+
+### NEXT
+The previous worker produced incomplete code (truncated `solve()`) and the stress test crashed/timed out. The brute-force approach is infeasible for $N=4$ in Python due to high overhead if implemented naively, but more importantly, the solution itself is empty. You must implement an $O(N \log N)$ or $O(N)$ solution based on combinatorial counting, not brute force.
+
+**Analysis:**
+The problem asks for the number of perfect matchings between White vertices $W$ and Black vertices $B$ such that the resulting directed graph is strongly connected.
+The base graph is a path $1 \to 2 \to \dots \to 2N$.
+Added edges are $w \to b$ for each pair $(w,b)$.
+Strong connectivity in a graph formed by a path plus chords is equivalent to the condition that for every cut between $k$ and $k+1$, there is at least one edge crossing from right to left (i.e., from $>k$ to $\le k$).
+Let $L_k = \{1, \dots, k\}$ and $R_k = \{k+1, \dots, 2N\}$.
+The base edge $k \to k+1$ goes left to right.
+For the graph to be strongly connected, we need a path from any node in $R_k$ to any node in $L_k$. Since the only edges entering $L_k$ from outside $L_k$ are the added edges $w \to b$ where $w \in R_k$ and $b \in L_k$, there must be **at least one** such edge for every $k=1, \dots, 2N-1$.
+If there is no such edge for some $k$, all edges from $L_k$ to $R_k$ are the base edge and possibly $w \in L_k, b \in R_k$ added edges. There are no edges from $R_k$ to $L_k$. Thus $R_k$ cannot reach $L_k$.
+So the condition is: For all $k \in \{1, \dots, 2N-1\}$, there exists at least one pair $(w,b)$ such that $w > k$ and $b \le k$.
+This is equivalent to: For all $k$, it is **not** the case that all White vertices in $L_k$ are matched to Black vertices in $R_k$.
+Let $W_{\le k}$ be the number of White vertices in $L_k$ and $B_{\le k}$ be the number of Black vertices in $L_k$.
+The number of White vertices in $L_k$ is $w_k$. The number of Black vertices in $L_k$ is $b_k$.
+Note $w_k + b_k = k$.
+The total number of White vertices is $N$, so White vertices in $R_k$ is $N - w_k$.
+The total number of Black vertices is $N$, so Black vertices in $R_k$ is $N - b_k$.
+The condition "all $w_k$ Whites in $L_k$ are matched to Blacks in $R_k$" is possible only if $N - b_k \ge w_k$, i.e., $N \ge w_k + b_k = k$. This is always true.
+We need to count the number of matchings where **no** cut $k$ is "blocked" (i.e., no cut $k$ has all its internal Whites matched to external Blacks).
+This looks like the Principle of Inclusion-Exclusion or a known combinatorial structure.
+Actually, there is a simpler characterization.
+Consider the sequence of colors. Let $W_i = 1$ if $S_i=W$ and $-1$ if $S_i=B$? Or vice versa.
+Let's look at Sample 1: `BWBW`. $N=2$.
+Positions: 1:B, 2:W, 3:B, 4:W.
+Valid pairs: $(2,3), (4,1)$.
+Edges: $2\to3, 4\to1$.
+Base: $1\to2, 2\to3, 3\to4$.
+Total: $1\to2\to3\to4$ and $4\to1$, $2\to3$ (redundant).
+Cycle $1\to2\to3\to4\to1$. SC.
+
+Let's try to derive the formula.
+The total number of matchings is $N!$.
+Let $A_k$ be the event that all Whites in $L_k$ are matched to Blacks in $R_k$.
+We want to count matchings avoiding all $A_k$.
+This is difficult directly. However, observe the structure.
+If we define a sequence of +1 for W and -1 for B, does it need to stay positive?
+In Sample 1 `BWBW`: B, W, B, W.
+Prefix sums (B=-1, W=1): -1, 0, -1, 0.
+Sample 2 `BWWBWBWB`: B, W, W, B, W, B, W, B.
+Prefix sums: -1, 0, 1, 0, 1, 0, 1, 0.
+Result 0.
+
+Let's look at the condition for $N=1$. `BW` or `WB`.
+If `BW`: 1:B, 2:W. Pair (2,1). Edge $2\to1$. Base $1\to2$. SC. Ans 1.
+If `WB`: 1:W, 2:B. Pair (1,2). Edge $1\to2$. Base $1\to2$. Not SC (2 cannot reach 1). Ans 0.
+So for $N=1$, `BW` gives 1, `WB` gives 0.
+Prefix sum (B=-1, W=1):
+`BW`: -1, 0.
+`WB`: 1, 0.
+It seems if the first char is B, it might be good?
+Check `WB`: First char W. Ans 0.
+Check `BW`: First char B. Ans 1.
+
+Let's check $N=2$ cases.
+`BWBW` (Ans 1). First char B.
+`BBWW`: 1:B, 2:B, 3:W, 4:W.
+Pairs must be W to B.
+W: 3,4. B: 1,2.
+Possible matchings:
+(3,1), (4,2) -> Edges $3\to1, 4\to2$.
+Cuts:
+k=1: $L=\{1\}, R=\{2,3,4\}$. Edge $3\to1$ enters L. OK.
+k=2: $L=\{1,2\}, R=\{3,4\}$. Edges $3\to1, 4\to2$ enter L. OK.
+k=3: $L=\{1,2,3\}, R=\{4\}$. Edge $4\to2$ enters L. OK.
+Is it SC?
+Paths:
+$1\to2\to3\to1$ (via $3\to1$).
+$4\to2\to3\to1\to2$...
+Can we reach 4 from 1?
+$1\to2\to3\to1$ loop.
+$2\to3\to1$ loop.
+$3\to1$ loop.
+$4\to2$...
+From 1, we can go to 2, 3, 1. We cannot reach 4 because there are no edges entering 4 except from 3 (base).
+Wait, base edge $3\to4$.
+So $1\to2\to3\to4$.
+Can we reach 1 from 4? $4\to2\to3\to1$. Yes.
+Can we reach 4 from 3? $3\to4$. Yes.
+Can we reach 1 from 2? $2\to3\to1$. Yes.
+So `BBWW` with matching (3,1),(4,2) is SC.
+Are there other matchings?
+(3,2), (4,1) -> Edges $3\to2, 4\to1$.
+k=1: Edge $4\to1$ enters. OK.
+k=2: Edge $3\to2, 4\to1$ enter. OK.
+k=3: Edge $4\to1$ enters. OK.
+Graph: $1\to2\to3\to4$ (base). $3\to2, 4\to1$.
+Paths:
+$1\to2\to3\to4\to1$. SC.
+So `BBWW` should have answer 2?
+Let's re-read Sample 2: `BWWBWBWB` answer 0.
+Let's check `BBWW` manually with code logic later, but intuitively it seems valid.
+
+The problem is likely related to the number of "non-crossing" or specific orderings, but actually, the condition "every cut has a back edge" is equivalent to the permutation of matches not having a "prefix" that maps entirely to the suffix.
+This is exactly the condition for the **ballot problem** or counting permutations with no "bad" prefixes.
+Specifically, if we list the Black vertices in increasing order $b_1, \dots, b_N$ and match them to White vertices $w_{\pi(1)}, \dots, w_{\pi(N)}$, the condition is related to the relative positions.
+However, a known result for "Strongly Connected Component counting in this specific graph" (Path + Matching) is that the answer is 0 if the string is not a "Dyck Word" variant?
+Actually, for `BW` (N=1), ans=1. `WB` (N=1), ans=0.
+For `BWBW` (N=2), ans=1.
+For `BBWW` (N=2), let's assume ans=2?
+If the formula is $2^{N-1} \times (\text{something})$?
+
+Let's look at the stress test failure: `WBBBBWWW` ($N=4$).
+S: W, B, B, B, B, W, W, W.
+Starts with W.
+Prefix sums (W=1, B=-1): 1, 0, -1, -2, -3, -2, -1, 0.
+Min prefix sum is -3.
+Sample 2 `BWWBWBWB` (N=4): B,W,W,B,W,B,W,B.
+Prefix sums (W=1, B=-1): -1, 0, 1, 0, 1, 0, 1, 0.
+Min prefix sum is -1.
+Answer 0.
+
+Hypothesis: The answer is non-zero only if the string can be rotated or has some property?
+No, the vertices are fixed.
+The condition "for all k, there is an edge from $>k$ to $\le k$" means that for every $k$, $B_{\le k}$ is not matched only to $W_{> k}$?
+Actually, if we define the sequence of colors, the number of valid matchings is given by:
+If the sequence of W/B is such that for every prefix, the number of W is not "too large" or "too small"?
+For `WB` (N=1), W is first. $W_{\le 1}=1, B_{\le 1}=0$.
+Cut $k=1$. $L=\{1\}, R=\{2\}$.
+White in L: 1. Black in R: 1.
+If we match $1\to2$, edge is $1\to2$. No edge $R\to L$. Not SC.
+So if $S_1=W$, the only possible match for $1$ is to a B in R. This "uses up" the only W in L, leaving no W in L to match to B in L? No, W in L must match to some B. If it matches to B in R, then no W remains in L to match to B in L?
+Wait, if $S_1=W$, $w_1=1, b_1=0$.
+The W at 1 must match a B.
+If it matches a B at $j>1$, then the edge is $1\to j$ (Left to Right).
+Cut $k=1$: Edges from $R$ to $L$?
+The only node in $L$ is 1.
+Edges entering 1?
+Base edge: None (1 is source of $1\to2$).
+Added edges entering 1? Only if some $W_i$ with $i>1$ matches $1$.
+But 1 is White, so no edge enters 1 from an added edge?
+**CRITICAL OBSERVATION**:
+The added edges are from White to Black.
+Vertex 1 is White in `WB`.
+So NO added edge can enter Vertex 1.
+The only edge entering Vertex 1 in the whole graph is... none?
+Base edges: $1\to2, \dots$. No edge enters 1.
+Added edges: $W \to B$. 1 is W, so 1 is a source, not a destination.
+Thus, in `WB` (N=1), Vertex 1 has in-degree 0.
+It cannot be reached from anywhere else.
+So the graph is NEVER strongly connected if $S_1=W$.
+Similarly, if $S_{2N}=B$, Vertex $2N$ is Black.
+Base edge $2N-1 \to 2N$.
+Added edges: $W \to B$. 2N is B, so 2N is a destination.
+Does any edge leave $2N$?
+Base: No (end of path).
+Added: 2N is B, so 2N is not a source.
+Thus Vertex $2N$ has out-degree 0.
+It cannot reach anywhere else.
+So if $S_{2N}=B$, the graph is NEVER strongly connected.
+
+Therefore:
+1. If $S_1=W$, Answer = 0.
+2. If $S_{2N}=B$, Answer = 0.
+In Sample 1 `BWBW`: $S_1=B, S_4=W$. Conditions met. Ans 1.
+In Sample 2 `BWWBWBWB`: $S_1=B, S_8=B$. $S_{2N}=B$. Ans 0.
+In Stress `WBBBBWWW`: $S_1=W$. Ans 0.
+
+What if $S_1=B$ and $S_{2N}=W$?
+Is it always possible?
+Consider `BBWW` (N=2). $S_1=B, S_4=W$.
+We found 2 valid matchings.
+Consider `BWWB` (N=2). $S_1=B, S_4=B$. Ans 0.
+Consider `BWBB`? No, N=2, 2W 2B. `BWBB` is 1W 3B. Invalid input.
+Consider `BWB W` (Sample 1).
+Consider `BB WW` (`BBWW`).
+Consider `BW BW` (`BWBW`).
+Consider `W`? No.
+Consider `BWWBWBWB` (Sample 2) -> $S_8=B$. Ans 0.
+
+What about `BWBW` vs `BBWW`?
+`BWBW`: W at 2,4. B at 1,3.
+Valid pairs:
+(2,1) -> $2\to1$. (4,3) -> $4\to3$.
+Cuts:
+k=1: $L=\{1\}, R=\{2,3,4\}$. Edge $2\to1$ enters L. OK.
+k=2: $L=\{1,2\}, R=\{3,4\}$. Edge $4\to3$ enters L. OK.
+k=3: $L=\{1,2,3\}, R=\{4\}$. Edge $4\to3$ enters L. OK.
+SC?
+$1\to2\to3\to4$.
+$2\to1$.
+$4\to3$.
+$1\to2\to1$ loop.
+$3\to4\to3$ loop.
+Can 3 reach 1? $3\to4\to3$ loop. No path to 1.
+So (2,1),(4,3) is NOT SC.
+My previous manual check for Sample 1 said (2,1),(4,3) is NOT SC. Correct.
+The valid one was (2,3), (4,1).
+Edges: $2\to3, 4\to1$.
+k=1: Edge $4\to1$ enters. OK.
+k=2: Edge $4\to1$ enters. OK.
+k=3: Edge $4\to1$ enters? $1 \in L_3$. Yes.
+SC?
+$1\to2\to3\to4\to1$. Yes.
+
+So for `BWBW`, only 1 valid.
+For `BBWW`:
+W at 3,4. B at 1,2.
+Matches:
+(3,1), (4,2) -> $3\to1, 4\to2$.
+k=1: $3\to1$ enters. OK.
+k=2: $3\to1, 4\to2$ enter. OK.
+k=3: $4\to2$ enters ($2 \in L_3$). OK.
+SC?
+$1\to2\to3\to4$.
+$3\to1, 4\to2$.
+$1\to2\to3\to1$ loop.
+$4\to2\to3\to1\to2$...
+Can 4 reach 1? $4\to2\to3\to1$. Yes.
+Can 1 reach 4? $1\to2\to3\to4$. Yes.
+SC.
+(3,2), (4,1) -> $3\to2, 4\to1$.
+k=1: $4\to1$ enters. OK.
+k=2: $3\to2, 4\to1$ enter. OK.
+k=3: $4\to1$ enters. OK.
+SC?
+$1\to2\to3\to4$.
+$3\to2, 4\to1$.
+$1\to2\to3\to2$ loop?
+$1\to2\to3\to4\to1$.
+$1\to2\to3\to2$...
+Can 3 reach 1? $3\to2$. 2 goes to 3. Loop 2-3.
+3 cannot reach 4? $3\to2\to3$. No.
+Wait, $3\to2$. From 2, edge $2\to3$ (base) and $3\to2$ (added).
+Is there an edge from 2 or 3 to 4?
+Base $3\to4$.
+So $3\to4$.
+Then $4\to1$.
+So $3\to4\to1$. Yes.
+So this is also SC.
+So `BBWW` has answer 2.
+
+General Formula?
+If $S_1=B$ and $S_{2N}=W$, the answer seems to be related to the number of valid "ballot" sequences.
+Actually, this problem is equivalent to counting the number of **valid permutations** of the matching such that the induced "arc" structure is strong.
+It turns out the answer is $0$ if $S_1=W$ or $S_{2N}=B$.
+Otherwise, the answer is $N!$ divided by something? Or just specific counts.
+For `BWBW` (N=2), Ans=1.
+For `BBWW` (N=2), Ans=2.
+Difference: `BWBW` has W,B,W,B. `BBWW` has B,B,W,W.
+In `BWBW`, the W's are at 2,4. B's at 1,3.
+In `BBWW`, W's at 3,4. B's at 1,2.
+
+Let's check $N=3$.
+`BBBWWW` (N=3).
+W at 4,5,6. B at 1,2,3.
+This is "sorted" B's then W's.
+Likely answer is related to Catalan? Or $2^{N-1}$?
+For N=1, `BW` -> 1.
+For N=2, `BBWW` -> 2.
+For N=3, `BBBWWW` -> ?
+Hypothesis: $2^{N-1}$?
+If so, N=3 -> 4.
+
+How to calculate generally?
+This is a known problem type: "Counting matchings on a path that ensure strong connectivity".
+The condition is that the matching does not contain a "cut" that is not crossed backwards.
+This is equivalent to the permutation $\pi$ (mapping B indices to W indices) not having a prefix that maps to a suffix?
+Let $b_1 < b_2 < \dots < b_N$ be B positions.
+Let $w_1 < w_2 < \dots < w_N$ be W positions.
+A matching is a permutation $\sigma$ of $1..N$ where $b_i$ is matched to $w_{\sigma(i)}$.
+The edge is $b_i \to w_{\sigma(i)}$? No, $W \to B$.
+Edge is $w_{\sigma(i)} \to b_i$.
+Condition: For all $k$, there is $j$ such that $w_j > k \ge b_j$? No, $w_j \in R_k, b_j \in L_k$.
+So $w_{\sigma(i)} > k$ and $b_i \le k$.
+This must exist for all $k$.
+This is equivalent to: For all $k$, it is NOT the case that for all $i$ with $b_i \le k$, we have $w_{\sigma(i)} \le k$?
+No, "No edge from R to L" means ALL edges from $W \in L_k$ go to $B \in R_k$ AND ALL edges from $W \in R_k$ go to $B \in R_k$?
+No.
+Edges from $L$ to $R$:
+1. Base edge $k \to k+1$.
+2. Added edges $w \to b$ with $w \in L_k, b \in R_k$.
+Edges from $R$ to $L$:
+1. Added edges $w \to b$ with $w \in R_k, b \in L_k$.
+Base edges never go $R \to L$.
+So we need at least one added edge $w \in R_k, b \in L_k$.
+This fails if NO added edge goes from $R_k$ to $L_k$.
+This happens if ALL added edges from $W \in R_k$ go to $B \in R_k$ AND ALL added edges from $W \in L_k$ go to $B \in R_k$?
+No, it fails if there is simply no edge $R \to L$.
+So, $\forall w \in W \cap R_k$, $b(w) \in R_k$ AND $\forall w \in W \cap L_k$, $b(w) \in L_k$?
+No, if $w \in L_k$ matches to $b \in L_k$, that's $L \to L$.
+If $w \in L_k$ matches to $b \in R_k$, that's $L \to R$.
+If $w \in R_k$ matches to $b \in L_k$, that's $R \to L$.
+If $w \in R_k$ matches to $b \in R_k$, that's $R \to R$.
+We need at least one $R \to L$.
+So the bad condition is: No $w \in R_k$ is matched to a $b \in L_k$.
+This means all $W \in R_k$ are matched to $B \in R_k$.
+This is possible only if $|W \cap R_k| \le |B \cap R_k|$.
+$N - w_k \le N - b_k \implies b_k \le w_k$.
+So if $b_k < w_k$, it is **possible** that all $W \in R_k$ match to $B \in R_k$.
+If $b_k > w_k$, then $|W \cap R_k| > |B \cap R_k|$, so by Pigeonhole, some $W \in R_k$ MUST match to $B \in L_k$.
+So if $b_k > w_k$ for all $k$, the condition is automatically satisfied?
+Wait.
+If $b_k > w_k$, then there MUST be an edge $R \to L$.
+So if $B_{\le k} > W_{\le k}$ for all $k=1..2N-1$, is it always SC?
+Let's check `BWBW` (N=2).
+k=1: B=1, W=0. $1>0$.
+k=2: B=1, W=1. $1=1$.
+k=3: B=2, W=1. $2>1$.
+At k=2, $b_2=w_2$. It is NOT guaranteed.
+In `BWBW`, at k=2, $W \in L_2 = \{2\}$, $B \in L_2 = \{1\}$.
+$W \in R_2 = \{4\}$, $B \in R_2 = \{3\}$.
+If we match $2\to3$ and $4\to1$, we have $R\to L$ ($4\to1$). OK.
+If we match $2\to1$ and $4\to3$, we have $L\to L$ ($2\to1$) and $R\to R$ ($4\to3$). No $R\to L$. FAIL.
+So at boundaries where $b_k = w_k$, we have constraints.
+
+The problem reduces to counting matchings such that for every $k$ with $b_k \le w_k$, there is at least one $R \to L$ edge.
+Actually, if $b_k > w_k$, the condition is satisfied automatically.
+We only need to worry about $k$ where $w_k \ge b_k$.
+Let $K = \{k \mid w_k \ge b_k\}$.
+For $k \notin K$, $b_k > w_k$, so $|W \cap R_k| < |B \cap R_k|$ is false?
+$w_k \ge b_k \implies N-w_k \le N-b_k \implies |W \cap R_k| \le |B \cap R_k|$.
+If $w_k > b_k$, then $|W \cap R_k| < |B \cap R_k|$.
+So some $W \in R_k$ MUST match $B \in L_k$. Condition satisfied automatically.
+If $w_k = b_k$, then $|W \cap R_k| = |B \cap R_k|$. It is possible (but not necessary) that they match internally.
+So the constraints are ONLY at indices $k$ where $w_k \ge b_k$?
+Actually, if $w_k > b_k$, it's automatic.
+So we only need to ensure condition for $k$ where $w_k = b_k$?
+No, consider a sequence of equalities.
+This structure is equivalent to counting permutations that avoid certain patterns, which often leads to $O(N \log N)$ solutions using factorials and precomputation of "valid" segments.
+
+Given the complexity, the task should be to implement the check for $S_1=W$ or $S_{2N}=B$ (return 0), and then use a known algorithm for "number of matchings ensuring strong connectivity in a path graph", which is likely $2^{N-1}$ if the string is "good" (never $W_{prefix} > B_{prefix}$?), or calculated via DP/Factorials on the balance points.
+
+### TASKS
+- [todo] Implement basic checks: if S[0]=='W' or S[-1]=='B', print 0.
+- [todo] Investigate the combinatorial formula for valid matchings when S[0]=='B' and S[-1]=='W'. Check if it is $2^{N-1}$ or depends on prefix balances.
+- [todo] Implement the combinatorial counting algorithm using factorials/modular arithmetic.
+- [todo] Verify against Sample 1 (Ans 1), Sample 2 (Ans 0), Sample 3 (Ans 240792).
+- [todo] Run stress tests to ensure no timeouts and correctness on small random cases.

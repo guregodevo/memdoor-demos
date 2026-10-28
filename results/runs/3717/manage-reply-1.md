@@ -1,0 +1,7 @@
+### STATUS
+continue
+### NEXT
+Write the complete solution.py implementing Solution.minOperations: (1) compute cost[i] for every window of size x as the sum of absolute deviations from the median (use two heaps with lazy deletion or a sorted-list approach, maintaining left_sum and right_sum for O(n log x) total), (2) run a 2-D DP where dp[i][j] = min cost to place j non-overlapping x-windows in the first i elements, with recurrence dp[i][j] = min(dp[i-1][j], dp[i-x][j-1] + cost[i-x]) for i>=x, initialized with dp[0][0]=0 and dp[i][0]=0, returning dp[n][k]. Use a 1-D rolling array over j to keep space O(n*k) manageable (k<=15). Verify against both provided samples by running the grader.
+### TASKS
+- [todo] Write complete solution.py: sliding-window median cost computation + O(n*k) DP, verify against both samples
+- [todo] Edge-case and complexity check: confirm correctness when k=1, x=n, negative values; run brute-force cross-check on small random inputs

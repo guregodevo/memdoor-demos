@@ -1,0 +1,2 @@
+- Run stress test (200+ random inputs vs brute force) to confirm correctness on hidden cases.
+- If stress passes, verify performance on worst-case inputs (n=150, all elements 1-12, limit=5000).

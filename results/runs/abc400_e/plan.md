@@ -1,0 +1,9 @@
+### PLAN
+A 400 number has exactly two distinct prime factors p, q, each appearing with an even exponent, so N = p^(2a)·q^(2b) = (p^a·q^b)^2. Since N ≤ 10^12, we have p^a·q^b ≤ 10^6, meaning both primes are at most 10^6. The strategy is: (1) sieve all primes up to 10^6, (2) enumerate every valid (p, q, a, b) tuple to precompute the full sorted list of 400 numbers up to 10^12 (the list size is only a few hundred thousand), then (3) answer each of the Q queries with a binary search (bisect) into that precomputed list. This makes per-query cost O(log M) where M is the list size, easily fitting the 2×10^5 query budget in Python.
+
+### TASKS
+- **Generate primes and 400-numbers:** Write a function that sieves all primes ≤ 10^6, then loops over every unordered pair of distinct primes (p < q). For each pair, iterate a from 1 upward while p^(2a)·q^2 ≤ 10^12, and for each a iterate b from 1 upward while p^(2a)·q^(2b) ≤ 10^12, collecting the value p^(2a)·q^(2b) into a list. Sort and deduplicate the list.
+- **Build the solution I/O and query logic:** In `solution.py`, read Q and all A values from stdin. Precompute the sorted list of 400 numbers (from the task above) once at startup. For each query A, use `bisect_right` to find the largest 400 number ≤ A and print it.
+- **Optimize the generation loop:** Ensure the nested loops over primes and exponents are as tight as possible (break early when the product exceeds 10^12, skip pairs where p^2·q^2 > 10^12 immediately). Verify the total generation time is well under the time limit.
+- **Test against the provided sample:** Run `solution.py` on the sample input (5 queries: 404, 36, 60, 10^12, 123456789) and confirm the output matches 400, 36, 36, 1000000000000, 123454321.
+- **Edge-case and performance check:** Verify correctness for boundary values (A=36 → 36=2^2·3^2, A=10^12 → 10^12 itself is a 400 number). Time the full run with Q=200000 random queries up to 10^12 and confirm it finishes within a few seconds.

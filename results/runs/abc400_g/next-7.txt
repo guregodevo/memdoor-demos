@@ -1,0 +1,46 @@
+The current code uses an incorrect greedy heap approach (popping from three attribute heaps). DISCARD it entirely and implement the correct algorithm from the plan:
+
+**Algorithm per test case:**
+For each sort key in {X, Y, Z}:
+1. Sort the N cakes by that key descending (ties broken arbitrarily).
+2. Compute the N-1 adjacent-pair values: `v[i] = max(X[a]+X[b], Y[a]+Y[b], Z[a]+Z[b])` for consecutive cakes in the sorted order.
+3. Run `select_k_nonadjacent(v, K)` to pick K non-adjacent indices maximizing the sum.
+Answer = max over the three sort orders.
+
+**`select_k_nonadjacent(vals, K)` — max-heap + doubly-linked-list with undo nodes:**
+- Maintain a doubly-linked list of m = N-1 nodes (each with a value) and a max-heap of (−value, node_id).
+- For each of K iterations:
+  - Pop the max from the heap (skip nodes marked `deleted`).
+  - Let the node be `cur`, with left neighbor `L` and right neighbor `R` in the linked list.
+  - Add `cur.value` to the running answer.
+  - Mark `cur`, `L`, and `R` as deleted (if they exist).
+  - Create a new node with value = `(L.value if L else 0) + (R.value if R else 0) - cur.value`.
+  - Splice the new node into the linked list between `L.left` and `R.right` (handling boundaries: if L is None the new node becomes the head; if R is None it becomes the tail).
+  - Push (−new_value, new_id) onto the heap.
+- Return the running answer.
+
+**Implementation notes:**
+- Use arrays `left[]`, `right[]`, `val[]`, `deleted[]` for the linked list (size up to ~2N to account for virtual nodes; pre-allocate 2*N+5).
+- Use `heapq` (negate values for max-heap).
+- Use `sys.stdin.buffer.read().split()` for fast I/O.
+- The sum of N over all test cases ≤ 10^5, so total work is O(N log N).
+
+**Stress-failing case to verify (must output 50, 30, 53):**
+```
+3
+4 2
+12 3 11
+16 0 9
+7 5 11
+12 9 1
+2 1
+10 14 11
+15 16 4
+4 2
+20 3 0
+17 0 12
+5 11 11
+6 1 5
+```
+
+Write the complete `solution.py` from scratch (do not patch the existing code).

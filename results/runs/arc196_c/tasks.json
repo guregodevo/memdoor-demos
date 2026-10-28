@@ -1,0 +1,5 @@
+- [todo] Implement basic checks: if S[0]=='W' or S[-1]=='B', print 0.
+- [todo] Investigate the combinatorial formula for valid matchings when S[0]=='B' and S[-1]=='W'. Check if it is $2^{N-1}$ or depends on prefix balances.
+- [todo] Implement the combinatorial counting algorithm using factorials/modular arithmetic.
+- [todo] Verify against Sample 1 (Ans 1), Sample 2 (Ans 0), Sample 3 (Ans 240792).
+- [todo] Run stress tests to ensure no timeouts and correctness on small random cases.

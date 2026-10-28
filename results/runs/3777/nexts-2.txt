@@ -1,0 +1,3 @@
+- Re-run stress test (200 random inputs vs brute) to confirm the fix resolves the failure and introduces no regressions.
+- Test additional edge cases: all zeros, single element, k=0 with limit=1, large k requiring early exit.
+

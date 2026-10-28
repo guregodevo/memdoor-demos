@@ -1,0 +1,8 @@
+[STRESS: FAILED -- outputs differ on iteration 4. THIS IS A FAILING TEST; fix the bug it exposes. INPUT:]
+4
+llem
+eeme
+--- solution.py output:
+4
+--- brute.py output:
+3

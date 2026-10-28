@@ -1,0 +1,4 @@
+PASS tests/1.in
+PASS tests/2.in
+PASS tests/3.in
+Samples: 3; failures: 0

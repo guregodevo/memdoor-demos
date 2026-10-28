@@ -1,0 +1,2 @@
+- Stress test with 200+ random small inputs (N up to ~10, K up to N/2) against brute force to confirm no edge cases remain.
+- If stress passes, mark solved.

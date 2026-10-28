@@ -1,0 +1,5 @@
+- Design and implement efficient O(N log N) or O(N * polylog N) algorithm for large N (up to 10^5). The bitmask DP is a correctness oracle only.
+- Potential approaches to explore: (a) for each of 3 coordinates d, sort by d and use a DP that accounts for the possibility that other coordinates might dominate; (b) observe that w(i,j) ≥ max(X_i, X_j) + max(X_i, X_j) is not quite right but w(i,j) ≥ max(d_i + d_j) for each d, so lower bounds are easy but upper bounds need care; (c) try a "try all O(N) candidate pairings for the top element" recursive structure with memoization or branch-and-bound.
+- Once large-N algorithm is found, integrate and re-run stress + samples.
+- Stress test more thoroughly with random inputs (N up to 20, K varying) against a brute-force checker.
+

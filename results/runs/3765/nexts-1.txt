@@ -1,0 +1,3 @@
+- Run grader: python3 /Users/gregoryd/memdoor-coder/lcb-bench/grade.py --public 3765
+- If it fails, debug CHT redundancy/query conditions or indexing off-by-one
+

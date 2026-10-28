@@ -1,0 +1,101 @@
+### CODE
+```python
+import sys
+
+def solve():
+    input = sys.stdin.readline
+    N = int(input().strip())
+    S = input().strip()
+    T = input().strip()
+    
+    # Step 1: Build mapping f: S-char -> T-char; verify it's a function
+    f = {}
+    for s, t in zip(S, T):
+        if s in f:
+            if f[s] != t:
+                print(-1)
+                return
+        else:
+            f[s] = t
+    
+    # Step 2: Build directed graph of non-trivial edges (c -> d where c != d)
+    edges = {}
+    for c, d in f.items():
+        if c != d:
+            edges[c] = d
+    
+    E = len(edges)
+    if E == 0:
+        print(0)
+        return
+    
+    # Step 3: Find all cycles via path-following
+    color = [0] * 26  # 0=unvisited, 1=in current path, 2=done
+    cycles = []  # list of sets, each set is a cycle
+    
+    def idx(c):
+        return ord(c) - ord('a')
+    
+    for start in edges:
+        si = idx(start)
+        if color[si] != 0:
+            continue
+        path = []
+        pos = {}
+        cur = start
+        while cur in edges:
+            ci = idx(cur)
+            if color[ci] == 2:
+                break
+            if color[ci] == 1:
+                # Found a cycle starting at pos[cur]
+                cycle = path[pos[cur]:]
+                cycles.append(set(cycle))
+                break
+            color[ci] = 1
+            pos[cur] = len(path)
+            path.append(cur)
+            cur = edges[cur]
+        for node in path:
+            color[idx(node)] = 2
+    
+    C = len(cycles)
+    
+    # Step 4: A cycle of all 26 letters is impossible (no spare temporary)
+    for cycle in cycles:
+        if len(cycle) == 26:
+            print(-1)
+            return
+    
+    # Step 5: Count cycles with at least one incoming edge from outside
+    # (a node u NOT in the cycle with f(u) IN the cycle)
+    C_in = 0
+    for cycle in cycles:
+        has_incoming = False
+        for u, v in edges.items():
+            if v in cycle and u not in cycle:
+                has_incoming = True
+                break
+        if has_incoming:
+            C_in += 1
+    
+    # Step 6: Answer = E + C - C_in
+    # Each cycle normally needs +1 (a temporary), but if it has an incoming
+    # edge from a tail node, that tail node serves as the temporary for free.
+    print(E + C - C_in)
+
+solve()
+```
+### NOTES
+- **Core insight:** The problem is a functional graph over at most 26 letters. Each char c in S maps to f(c) in T. The graph of non-trivial edges (c→d, c≠d) decomposes into trees feeding into cycles.
+- **Impossibility conditions:** (1) Inconsistent mapping (same S-char maps to two different T-chars) → -1. (2) A cycle of length 26 (all letters in one cycle, no free temporary) → -1.
+- **Minimum operations formula:** E + C - C_in, where E = number of non-trivial edges, C = number of cycles, C_in = number of cycles that have at least one incoming edge from a node outside the cycle.
+- **Why C_in matters:** A cycle v1→v2→...→vk→v1 normally needs k+1 ops (k cycle edges + 1 temp). But if a tail node u maps into the cycle (u→v1), we use u as the temp: vk→u, v1→v2, ..., v(k-1)→vk, u→v1. The u→v1 edge was already required, so no extra op is needed. This saves 1 per such cycle.
+- **Stress test lesson:** The initial formula E+C (without subtracting C_in) overcounts. Example: S="llem", T="eeme" gives l→e, e→m, m→e. The 2-cycle {e,m} has incoming edge l→e, so C_in=1. Answer = 3+1-1 = 3, not 4.
+- **Cycle detection:** Standard path-following with color array (0/1/2). When we revisit a node with color 1, the segment from its first position to current is a cycle.
+- **26-cycle check:** Only impossible case beyond inconsistent mapping. If all 26 letters form one cycle, no letter is available as a temporary.
+### NEXT
+- Run the solution against all 4 samples to confirm they pass.
+- Run the stress test (200 random inputs vs brute force) to confirm no disagreements.
+### STATUS
+continue

@@ -1,0 +1,81 @@
+### CODE
+```python
+from typing import List
+
+class Solution:
+    def maxProduct(self, nums: List[int], k: int, limit: int) -> int:
+        n = len(nums)
+        total = sum(nums)
+        if abs(k) > total:
+            return -1
+        
+        offset = 1800
+        size = 2 * offset + 1
+        # dp[p][s+offset] = max product (<= limit) for alt_sum s, parity p, or -1
+        # reach[p][s+offset] = whether state (s, p) is reachable at all
+        # p=0: next element gets + sign (even index in subsequence)
+        # p=1: next element gets - sign (odd index in subsequence)
+        dp = [[-1] * size for _ in range(2)]
+        reach = [[False] * size for _ in range(2)]
+        
+        for x in nums:
+            # Snapshot to avoid reusing x
+            old_dp = [row[:] for row in dp]
+            old_reach = [row[:] for row in reach]
+            
+            # Start new subsequence with x (x at index 0, gets + sign)
+            start_idx = x + offset
+            reach[1][start_idx] = True
+            if x <= limit:
+                dp[1][start_idx] = max(dp[1][start_idx], x)
+            
+            # Extend existing subsequences from snapshot
+            for p in range(2):
+                for s_idx in range(size):
+                    if not old_reach[p][s_idx]:
+                        continue
+                    s = s_idx - offset
+                    if p == 0:
+                        new_s = s + x
+                        new_p = 1
+                    else:
+                        new_s = s - x
+                        new_p = 0
+                    if new_s < -offset or new_s > offset:
+                        continue
+                    new_idx = new_s + offset
+                    reach[new_p][new_idx] = True
+                    if x == 0:
+                        # Product resets to 0
+                        if dp[new_p][new_idx] < 0:
+                            dp[new_p][new_idx] = 0
+                    elif old_dp[p][s_idx] >= 0:
+                        new_prod = old_dp[p][s_idx] * x
+                        if new_prod <= limit:
+                            if new_prod > dp[new_p][new_idx]:
+                                dp[new_p][new_idx] = new_prod
+        
+        k_idx = k + offset
+        ans = max(dp[0][k_idx], dp[1][k_idx])
+        return ans if ans >= 0 else -1
+```
+
+### NOTES
+- **Problem:** Find non-empty subsequence with alternating sum = k, maximize product ≤ limit. Elements 0–12, n ≤ 150, |k| ≤ 10^5, limit ≤ 5000.
+- **DP state:** (alt_sum s, parity p) where p=0 means next element gets + (even index), p=1 means next gets - (odd index). Track max product ≤ limit for each state.
+- **Key bug fixed:** States with product > limit were being discarded entirely. But if a future element is 0, the product resets to 0. Solution: separate `reach[2][size]` boolean from `dp[2][size]` (int, -1 = no valid product). A state can be reachable (reach=True) without a valid product (dp=-1) when all paths to it have product > limit. When x=0, any reachable predecessor gives product 0.
+- **Transition:** From (s,p) with element x: if p=0 → (s+x, 1); if p=1 → (s-x, 0). Product multiplies by x (or resets to 0 if x=0).
+- **Start new subsequence:** x at index 0 gets +, so state (x, 1) with product x. Mark reach even if x > limit.
+- **Snapshot per element:** Copy dp and reach before processing to avoid reusing same element.
+- **Offset:** 1800 (= 150×12), size 3601. Bounds alt_sum to [-1800, 1800].
+- **Early exit:** |k| > sum(nums) → -1.
+- **Answer:** max(dp[0][k+offset], dp[1][k+offset]); return -1 if both are -1.
+- **Performance:** 150 × 2 × 3601 ≈ 1M inner iterations + 150 × 14K snapshot copies. Well within Python time limits.
+- **Verified:** All 3 samples pass. Failing stress case [12,8,0,1,1] k=3 limit=23 now correctly returns 0 via subsequence [12,8,0,1].
+
+### NEXT
+- Re-run stress test (200 random inputs vs brute) to confirm the fix resolves the failure and introduces no regressions.
+- Test additional edge cases: all zeros, single element, k=0 with limit=1, large k requiring early exit.
+
+### STATUS
+continue

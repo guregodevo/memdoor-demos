@@ -1,0 +1,2 @@
+- Run grader script to confirm all samples pass
+- Optionally run additional stress tests with a correct brute-force BFS on small inputs (alphabet ≤ 4, N ≤ 6)

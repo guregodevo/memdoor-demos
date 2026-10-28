@@ -1,0 +1,9 @@
+PASS tests/1.in
+PASS tests/2.in
+--- tests/3.out	2026-10-27 12:39:21
++++ /var/folders/6x/q2fpxr0963zcg36dhwqpwr3h0000gn/T/tmp.HI8eRp2oJO	2026-10-28 23:42:31
+@@ -1 +1 @@
+-240792
++0
+FAIL tests/3.in: output differs
+Samples: 3; failures: 1

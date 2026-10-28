@@ -1,0 +1,23 @@
+[STRESS: FAILED -- outputs differ on iteration 3. THIS IS A FAILING TEST; fix the bug it exposes. INPUT:]
+3
+4 2
+12 3 11
+16 0 9
+7 5 11
+12 9 1
+2 1
+10 14 11
+15 16 4
+4 2
+20 3 0
+17 0 12
+5 11 11
+6 1 5
+--- solution.py output:
+47
+30
+53
+--- brute.py output:
+50
+30
+53

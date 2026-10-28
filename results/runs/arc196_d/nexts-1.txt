@@ -1,0 +1,3 @@
+- Test on both samples to verify correctness
+- If performance is too slow, consider: (a) combining Case A and B into one CDQ pass per direction with dual sweeps, (b) replacing segment tree with a simpler structure for specific query patterns, (c) using array('i') for the tree
+- Stress test against brute force on small random inputs (N≤10, M≤8, Q≤10)

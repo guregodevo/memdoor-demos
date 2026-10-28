@@ -1,0 +1,124 @@
+### CODE
+```python
+import sys
+
+def solve():
+    data = sys.stdin.buffer.read().split()
+    idx = 0
+    T = int(data[idx]); idx += 1
+    out = []
+    for _ in range(T):
+        N = int(data[idx]); idx += 1
+        K = int(data[idx]); idx += 1
+        items = []
+        for i in range(N):
+            x = int(data[idx]); idx += 1
+            y = int(data[idx]); idx += 1
+            z = int(data[idx]); idx += 1
+            if x >= y and x >= z:
+                s, g = x, 0
+            elif y >= x and y >= z:
+                s, g = y, 1
+            else:
+                s, g = z, 2
+            items.append((s, x, y, z, g))
+
+        items.sort(key=lambda t: -t[0])
+
+        top = items[:2*K]
+        rest = items[2*K:]
+
+        T_g = [[], [], []]
+        R_g = [[], [], []]
+        for item in top:
+            T_g[item[4]].append(item)
+        for item in rest:
+            R_g[item[4]].append(item)
+
+        total_S = 0
+        for item in top:
+            total_S += item[0]
+
+        sizes = [len(T_g[0]), len(T_g[1]), len(T_g[2])]
+        odds = [i for i in range(3) if sizes[i] & 1]
+
+        if not odds:
+            ans = total_S
+        else:
+            a, b = odds[0], odds[1]
+            c = 3 - a - b
+
+            def min_gap(group, from_d, to_d):
+                if not group:
+                    return 10**30
+                mn = 10**30
+                for item in group:
+                    if from_d == 0:
+                        fv = item[1]
+                    elif from_d == 1:
+                        fv = item[2]
+                    else:
+                        fv = item[3]
+                    if to_d == 0:
+                        tv = item[1]
+                    elif to_d == 1:
+                        tv = item[2]
+                    else:
+                        tv = item[3]
+                    d = fv - tv
+                    if d < mn:
+                        mn = d
+                return mn
+
+            gap_ab = min_gap(T_g[a], a, b)
+            gap_ba = min_gap(T_g[b], b, a)
+            gap_ac = min_gap(T_g[a], a, c)
+            gap_bc = min_gap(T_g[b], b, c)
+
+            waste = min(gap_ab, gap_ba, gap_ac + gap_bc)
+            best = total_S - waste
+
+            # Pattern 2: swap 1 from a_in_T -> b_not_in_T (makes both even)
+            if R_g[b]:
+                best = max(best, total_S - T_g[a][-1][0] + R_g[b][0][0])
+
+            # Pattern 3: swap 1 from b_in_T -> a_not_in_T
+            if R_g[a]:
+                best = max(best, total_S - T_g[b][-1][0] + R_g[a][0][0])
+
+            # Pattern 4: remove 1 from a_in_T + 1 from b_in_T, add 2 from c_not_in_T
+            if len(R_g[c]) >= 2:
+                best = max(best, total_S - T_g[a][-1][0] - T_g[b][-1][0] + R_g[c][0][0] + R_g[c][1][0])
+
+            # Pattern 5: remove 1 from a_in_T + 1 from c_in_T, add 1 from c_not_in_T + 1 from b_not_in_T
+            if R_g[c] and R_g[b] and T_g[c]:
+                best = max(best, total_S - T_g[a][-1][0] - T_g[c][-1][0] + R_g[c][0][0] + R_g[b][0][0])
+
+            # Pattern 6: remove 1 from b_in_T + 1 from c_in_T, add 1 from c_not_in_T + 1 from a_not_in_T
+            if R_g[c] and R_g[a] and T_g[c]:
+                best = max(best, total_S - T_g[b][-1][0] - T_g[c][-1][0] + R_g[c][0][0] + R_g[a][0][0])
+
+            ans = best
+
+        out.append(str(ans))
+
+    sys.stdout.write('\n'.join(out) + '\n')
+
+solve()
+```
+### NOTES
+- **Problem structure:** Pair value = max(X_i+X_j, Y_i+Y_j, Z_i+Z_j). For items with S_i = max(X_i,Y_i,Z_i), pair value ≤ S_i+S_j, with equality iff same dominant dimension.
+- **Dominant dimension approach:** Assign each item to group 0/1/2 (X/Y/Z dominant, tie-break X>Y>Z). Within-group pairs have zero waste. Cross-group pairs have waste = min(gap_i_to_jdim, gap_j_to_idim, gap_i_to_3rd + gap_j_to_3rd).
+- **Key theorem:** The minimum waste over all cross-pairs between groups a and b equals min(min_gap_a_to_b, min_gap_b_to_a, min_gap_a_to_c + min_gap_b_to_c) where c is the third dimension. The third term handles cases where Z_i+Z_j exceeds both X_i+X_j and Y_i+Y_j.
+- **Top-2K selection + swap patterns:** Always start with top 2K items by S. If group parities are all even, answer = total_S. If two groups (a,b) are odd: try 6 patterns (accept waste, or 1-2 item swaps to make all groups even). The swap patterns remove the min-S item from an odd group and add the max-S item from the appropriate outside group.
+- **Why at most 2 swaps suffice:** Moving more items can only decrease the S-sum. The waste saving from fixing parity is bounded, so 1-2 swaps capture all improvements.
+- **Counterexample to naive top-2K:** A=(100,0,0)X, B=(0,100,0)Y, C=(50,50,50)X, K=1. Top-2K={A,B} gives waste 100, answer 100. But {A,C} gives answer 150. Fixed by pattern 3 (swap B→C).
+- **Old approach (sort by one dim, adjacent pairs, heap) was WRONG** — completely replaced.
+- **Complexity:** O(N log N) per test case for sorting. Gaps computed in O(N). Sum of N ≤ 10^5, well within limits.
+- **Verified:** Both samples pass. Stress case (N=7,K=3 → 103) passes. Test case 1 (N=4,K=2 → 64) passes.
+### NEXT
+- Run stress test (200 random inputs vs brute force) to confirm correctness
+- If any mismatch, analyze and fix
+- Timing check on worst case (N=100000, K=50000)
+### STATUS
+continue

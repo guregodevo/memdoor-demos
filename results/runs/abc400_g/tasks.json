@@ -1,0 +1,6 @@
+- [done] Implement fast input parsing for T test cases
+- [done] Implement the core subroutine `select_k_nonadjacent` (abandoned - approach was wrong)
+- [done] Implement the main solver with 3-sorting approach (WRONG - fails stress test)
+- [todo] Rewrite solution.py with the correct 3-way-assignment + parity-fix algorithm as described in NEXT
+- [todo] Run against both samples and the stress-failing input to verify correctness
+- [todo] Stress test with 200+ random small inputs against brute force

@@ -1,0 +1,17 @@
+Completely rewrite solution.py using the correct approach for ABC 400 G. For each test case:
+1. For each of the 3 sort keys (index 0=X, 1=Y, 2=Z), sort the N cakes by that attribute in descending order (tie-break by the other two, also descending, for determinism).
+2. In that sorted order, compute the N-1 adjacent-pair values: for each i in 0..N-2, value[i] = max(cake[i][0]+cake[i+1][0], cake[i][1]+cake[i+1][1], cake[i][2]+cake[i+1][2]).
+3. From these N-1 values, select exactly K non-adjacent indices to maximize the sum. Use the classic max-heap + doubly-linked-list "undo" technique:
+   - Maintain arrays `prev[i]`, `next[i]`, `val[i]` for a doubly-linked list of the currently available positions (initially 0..N-2, with sentinels -1 and N-1 at the ends).
+   - Push all N-1 positions into a max-heap (negated values, since Python has a min-heap).
+   - For K iterations: pop the max node `m`. If it has been "removed" (track with a `deleted` boolean array), skip. Otherwise: add val[m] to answer. Let L=prev[m], R=next[m]. Mark m, L, R as deleted. If L!=-1 and R!=N-1 (both exist as real nodes), create a new node `u` with val[u]=val[L]+val[R]-val[m], set prev[u]=prev[L], next[u]=next[R], fix the neighbors' links, and push u onto the heap. If only one neighbor exists (boundary), just fix the link. If no real neighbors, do nothing.
+4. The answer for the test case is the maximum of the three values from steps 1-3.
+5. Print answers one per line for T test cases.
+
+Use sys.stdin.buffer.read().split() for fast I/O. Use local variables in the inner loop for speed. The sum of N over all test cases is ≤ 10^5, so O(N log N) per case is fine.
+
+After writing, run:
+```
+python3 /Users/gregoryd/memdoor-coder/lcb-bench/grade.py --public abc400_g
+```
+Both samples must pass.

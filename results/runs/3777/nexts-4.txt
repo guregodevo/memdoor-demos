@@ -1,0 +1,4 @@
+- Run against all 3 samples to confirm they still pass
+- Run stress test (200 random inputs vs brute force) to confirm no more mismatches
+- Check performance on worst-case input (150 elements all =12, limit=5000)
+

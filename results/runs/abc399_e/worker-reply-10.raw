@@ -1,0 +1,88 @@
+### CODE
+```python
+import sys
+
+def solve():
+    data = sys.stdin.read().split()
+    N = int(data[0])
+    S = data[1]
+    T = data[2]
+    
+    # Build mapping f; if inconsistent, -1
+    f = [-1] * 26
+    for s, t in zip(S, T):
+        ci = ord(s) - ord('a')
+        ti = ord(t) - ord('a')
+        if f[ci] == -1:
+            f[ci] = ti
+        elif f[ci] != ti:
+            print(-1)
+            return
+    
+    # Count non-identity edges
+    E = 0
+    for i in range(26):
+        if f[i] != -1 and f[i] != i:
+            E += 1
+    
+    if E == 0:
+        print(0)
+        return
+    
+    # Find cycles in the functional graph (non-identity edges only)
+    color = [0] * 26  # 0=unvisited, 1=in-current-path, 2=done
+    in_cycle = [False] * 26
+    C = 0
+    
+    for start in range(26):
+        if color[start] != 0:
+            continue
+        path = []
+        cur = start
+        while f[cur] != -1 and f[cur] != cur and color[cur] == 0:
+            color[cur] = 1
+            path.append(cur)
+            cur = f[cur]
+        
+        # Check if we landed on a node in the current path (cycle detected)
+        if f[cur] != -1 and f[cur] != cur and color[cur] == 1:
+            C += 1
+            idx = path.index(cur)
+            for j in range(idx, len(path)):
+                in_cycle[path[j]] = True
+        
+        for node in path:
+            color[node] = 2
+    
+    # Impossibility: cycles exist AND no letter can serve as a temporary
+    # A letter is a valid temporary if: f[i]==-1 (not in S), f[i]==i (identity),
+    # or it's a tree node (in non-identity edges but not in a cycle)
+    if C > 0:
+        has_temp = False
+        for i in range(26):
+            if f[i] == -1 or f[i] == i or not in_cycle[i]:
+                has_temp = True
+                break
+        if not has_temp:
+            print(-1)
+            return
+    
+    print(E + C)
+
+solve()
+```
+### NOTES
+- **Core reduction:** The problem maps to a functional graph on 26 letters. Each char c in S maps to f(c) in T. Must be a valid function (consistent mapping), else -1.
+- **Minimum operations formula:** Answer = E + C, where E = number of non-identity edges (f(c)≠c and f(c) defined), C = number of directed cycles in the non-identity subgraph. Each tree edge costs 1 op; each cycle of length k costs k+1 ops (needs one temporary).
+- **Impossibility condition:** Answer is -1 iff (C > 0) AND no valid temporary exists. A letter i is a valid temporary iff f[i]==-1 (absent from S), f[i]==i (identity), or f[i]≠-1 and f[i]≠i and not in_cycle[i] (tree node, processable before cycles). Equivalently: -1 iff all 26 letters are in cycles.
+- **Cycle detection:** Standard DFS with 3-color marking on the functional graph. Follow edges only for non-identity, defined mappings. If we land on a color-1 node, a cycle is found starting at that node in the current path.
+- **Tree node ordering:** Tree nodes must be processed before cycles (they point toward cycles). After processing, tree nodes become free temporaries. This is why tree nodes count as valid temporaries.
+- **Sample verification:** All 4 samples pass. Sample 1: E=4, C=0 → 4. Sample 4: E=3, C=1 → 4. Sample 3: inconsistent mapping → -1.
+- **Stress test note:** The iteration-16 "failure" was brute.py crashing, not solution.py. The input had inconsistent mapping (b→a and b→s), correctly giving -1.
+- **Complexity:** O(N + 26) time, O(26) space. Well within limits for N up to 2×10^5.
+### NEXT
+- Run the 4 official samples to confirm pass
+- Generate 50+ targeted random tests (N up to 10, biased toward all-26-letter S and cycles) and compare against a brute-force BFS over rename sequences (depth ≤ 7)
+- Specifically stress-test the impossibility boundary: all 26 letters in one cycle vs all 26 with one identity
+### STATUS
+continue

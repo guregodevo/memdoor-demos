@@ -1,0 +1,120 @@
+### CODE
+```python
+from typing import List
+
+class Solution:
+    def minOperations(self, nums: List[int], x: int, k: int) -> int:
+        n = len(nums)
+        m = n - x + 1
+        
+        # Coordinate compression
+        sorted_vals = sorted(set(nums))
+        val_to_idx = {v: i + 1 for i, v in enumerate(sorted_vals)}
+        num_vals = len(sorted_vals)
+        
+        # Fenwick Tree (BIT) utilities
+        freq_bit = [0] * (num_vals + 1)
+        sum_bit = [0] * (num_vals + 1)
+        
+        def bit_update(bit, i, delta):
+            while i <= num_vals:
+                bit[i] += delta
+                i += i & (-i)
+        
+        def bit_query(bit, i):
+            s = 0
+            while i > 0:
+                s += bit[i]
+                i -= i & (-i)
+            return s
+        
+        def find_kth(bit, k):
+            # Find the 1-indexed position of the k-th smallest element in the BIT
+            pos = 0
+            bitmask = 1 << (num_vals.bit_length() - 1)
+            while bitmask > 0:
+                nxt = pos + bitmask
+                if nxt <= num_vals and bit[nxt] < k:
+                    pos = nxt
+                    k -= bit[nxt]
+                bitmask >>= 1
+            return pos + 1
+        
+        # Initialize BITs with first x elements
+        for i in range(x):
+            idx = val_to_idx[nums[i]]
+            bit_update(freq_bit, idx, 1)
+            bit_update(sum_bit, idx, nums[i])
+        
+        total_sum = sum(nums[:x])
+        cost = [0] * m
+        
+        for window_start in range(m):
+            # Find median: the (x+1)//2-th smallest (1-indexed)
+            med_rank = (x + 1) // 2
+            med_idx = find_kth(freq_bit, med_rank)
+            med_val = sorted_vals[med_idx - 1]
+            
+            # Compute cost = sum |a[i] - med_val|
+            count_le = bit_query(freq_bit, med_idx)
+            sum_le = bit_query(sum_bit, med_idx)
+            count_gt = x - count_le
+            sum_gt = total_sum - sum_le
+            
+            cost[window_start] = med_val * count_le - sum_le + sum_gt - med_val * count_gt
+            
+            if window_start == m - 1:
+                break
+            
+            # Slide: remove nums[window_start], add nums[window_start + x]
+            rem_val = nums[window_start]
+            rem_idx = val_to_idx[rem_val]
+            bit_update(freq_bit, rem_idx, -1)
+            bit_update(sum_bit, rem_idx, -rem_val)
+            
+            add_val = nums[window_start + x]
+            add_idx = val_to_idx[add_val]
+            bit_update(freq_bit, add_idx, 1)
+            bit_update(sum_bit, add_idx, add_val)
+            
+            total_sum += add_val - rem_val
+        
+        # Phase 2: DP for selecting k non-overlapping windows
+        # Window at position i covers nums[i..i+x-1]
+        # Non-overlapping: if windows at p and q (p<q), need q >= p+x
+        INF = float('inf')
+        prev_row = [0] * m  # j=0 base case
+        
+        for j in range(1, k + 1):
+            curr_row = [INF] * m
+            for i in range(m):
+                # Option 1: skip window at position i
+                if i > 0:
+                    curr_row[i] = min(curr_row[i], curr_row[i - 1])
+                # Option 2: place a window at position i
+                if j == 1:
+                    curr_row[i] = min(curr_row[i], cost[i])
+                else:
+                    if i >= x:
+                        curr_row[i] = min(curr_row[i], prev_row[i - x] + cost[i])
+            prev_row = curr_row
+        
+        return prev_row[m - 1]
+```
+
+### NOTES
+- **Approach:** Two-phase solution: (1) sliding-window median cost via Fenwick Tree (BIT) over coordinate-compressed values, (2) rolling-row DP for k non-overlapping windows.
+- **Phase 1 (BIT-based sliding median):** Coordinate-compress all values. Maintain two BITs (frequency and sum). For each window of size x, find the (x+1)//2-th smallest via BIT k-th query in O(log V). Compute cost = med*count_le - sum_le + sum_gt - med*count_gt. Slide by updating two positions in both BITs. Total: O(n log V) where V = number of distinct values.
+- **Phase 2 (DP):** m = n-x+1 window positions. prev_row[i] = min cost to place j-1 windows among positions 0..i. Transition: curr_row[i] = min(curr_row[i-1], prev_row[i-x] + cost[i]) for i>=x. For j=1: curr_row[i] = min(curr_row[i-1], cost[i]). Answer = prev_row[m-1] after k iterations. O(n*k) time.
+- **Median rank:** Using (x+1)//2 (lower middle for even x). Verified that any value between the two middle elements gives the same cost for even x, so this choice is valid.
+- **find_kth implementation:** Standard BIT tree-walk. bitmask starts at highest power of 2 <= num_vals. Walk down, at each level check if left subtree has < k elements. O(log V) per query.
+- **Verified both examples by hand:** Example 1 gives cost=[7,5,6,4,4,3,7], DP answer=8. Example 2 gives cost=[11,0,0,3,4], DP answer=3.
+- **Edge cases handled:** x=n (m=1, k must be 1), k=1, all equal elements (cost=0), negative values (BIT handles negatives in sum_bit fine).
+- **Complexity:** O(n log V + n*k) time, O(n + V) space. Well within limits for n=10^5, k=15.
+
+### NEXT
+- Run the grader to confirm both public samples pass
+- If any hidden test fails, check for off-by-one in DP indexing or BIT query bounds
+
+### STATUS
+continue

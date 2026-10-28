@@ -1,0 +1,4 @@
+- Run grader to confirm both samples pass
+- Stress test with small random inputs against brute force
+- Check hidden test performance (n=10^5 worst case)
+

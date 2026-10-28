@@ -1,0 +1,67 @@
+### CODE
+```python
+from typing import List
+
+class Solution:
+    def maxProduct(self, nums: List[int], k: int, limit: int) -> int:
+        # dp_plus: set of (sum, product) for non-empty subsequences where next element gets +
+        # dp_minus: set of (sum, product) for non-empty subsequences where next element gets -
+        dp_plus = set()
+        dp_minus = set()
+        
+        for x in nums:
+            new_plus = set(dp_plus)
+            new_minus = set(dp_minus)
+            
+            # Start new subsequence [x]
+            if x <= limit:
+                new_minus.add((x, x))
+            
+            # Extend dp_plus: add x at even position (gets +) → goes to minus
+            if x == 0:
+                for (s, p) in dp_plus:
+                    new_minus.add((s, 0))
+            else:
+                max_p = limit // x
+                for (s, p) in dp_plus:
+                    if p <= max_p:
+                        new_minus.add((s + x, p * x))
+            
+            # Extend dp_minus: add x at odd position (gets -) → goes to plus
+            if x == 0:
+                for (s, p) in dp_minus:
+                    new_plus.add((s, 0))
+            else:
+                max_p = limit // x
+                for (s, p) in dp_minus:
+                    if p <= max_p:
+                        new_plus.add((s - x, p * x))
+            
+            dp_plus = new_plus
+            dp_minus = new_minus
+        
+        # Find max product with sum == k
+        best = -1
+        for (s, p) in dp_plus:
+            if s == k and p > best:
+                best = p
+        for (s, p) in dp_minus:
+            if s == k and p > best:
+                best = p
+        
+        return best
+```
+### NOTES
+- **Core DP approach:** Maintain two sets of (sum, product) tuples. dp_plus holds non-empty subsequences where the next element to add is at an even index (gets +). dp_minus holds those where next is at odd index (gets -). For each element x: start new subsequence [x] in dp_minus; extend dp_plus states by adding x (sum+x, product*x) into dp_minus; extend dp_minus states by subtracting x (sum-x, product*x) into dp_plus. Keep old states (skip x).
+- **Zero handling:** When x=0, product becomes 0 regardless of previous product. The transition (s, p) → (s, 0) is always valid since 0 ≤ limit. Starting [0] gives (0,0) which is valid. No special separation needed—zeros are handled naturally within the same DP.
+- **Empty subsequence avoided:** By only adding states when we actually pick an element (starting or extending), the empty subsequence (0,1) never appears. This cleanly handles the k=0 edge case.
+- **Product bound:** Only add transitions where p*x ≤ limit. Precompute max_p = limit//x for non-zero x. For x=0, p*0=0 is always ≤ limit.
+- **Verified examples:** [1,2,3] k=2 limit=10 → 6 (subseq [1,2,3]); [0,2,3] k=-5 limit=12 → -1 (unreachable); [2,2,3,3] k=0 limit=9 → 9 (subseq [3,3]).
+- **Performance:** Sums range ±1800, products ≤ 5000. In practice, for each sum the number of distinct products is small (especially with values 1-12, products are limited). Worst-case set size ~30k-50k. Total work: 150 * set_size ≈ 5-7M operations. Should run in ~3-5s in Python.
+- **No separate zero-reachability DP needed:** The unified approach handles zeros naturally since product 0 states propagate correctly through subsequent elements.
+### NEXT
+- Run the grader to confirm all 3 samples pass
+- Stress test with 200 random small inputs vs brute force
+- Check performance on worst case (n=150, all 12s, k=0, limit=5000)
+### STATUS
+continue

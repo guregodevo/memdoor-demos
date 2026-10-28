@@ -1,0 +1,123 @@
+### CODE
+```python
+import sys
+import heapq
+
+def select_k_nonadjacent(vals, K):
+    n = len(vals)
+    if K == 0 or n == 0:
+        return 0
+    max_k = (n + 1) // 2
+    if K > max_k:
+        K = max_k
+
+    L = [i - 1 for i in range(n)]
+    R = [i + 1 for i in range(n)]
+    L[0] = -1
+    R[n - 1] = -1
+    alive = [True] * n
+    val = list(vals)
+
+    heap = [(-vals[i], i) for i in range(n)]
+    heapq.heapify(heap)
+    heappop = heapq.heappop
+    heappush = heapq.heappush
+
+    ans = 0
+    for _ in range(K):
+        while heap:
+            neg_v, idx = heappop(heap)
+            if alive[idx]:
+                break
+        if not alive[idx]:
+            break
+
+        v = -neg_v
+        ans += v
+
+        l = L[idx]
+        r = R[idx]
+        ll = L[l] if l != -1 else -1
+        rr = R[r] if r != -1 else -1
+
+        alive[idx] = False
+        if l != -1:
+            alive[l] = False
+        if r != -1:
+            alive[r] = False
+
+        if l != -1 and r != -1:
+            val[idx] = val[l] + val[r] - v
+            alive[idx] = True
+            L[idx] = ll
+            R[idx] = rr
+            if ll != -1:
+                R[ll] = idx
+            if rr != -1:
+                L[rr] = idx
+            heappush(heap, (-val[idx], idx))
+        else:
+            if ll != -1:
+                R[ll] = rr
+            if rr != -1:
+                L[rr] = ll
+
+    return ans
+
+def solve():
+    data = sys.stdin.buffer.read().split()
+    ptr = 0
+    T = int(data[ptr]); ptr += 1
+    results = []
+
+    for _ in range(T):
+        N = int(data[ptr]); ptr += 1
+        K = int(data[ptr]); ptr += 1
+
+        cakes = []
+        for i in range(N):
+            x = int(data[ptr]); ptr += 1
+            y = int(data[ptr]); ptr += 1
+            z = int(data[ptr]); ptr += 1
+            cakes.append((x, y, z))
+
+        best = 0
+
+        for sk in range(3):
+            cs = sorted(cakes, key=lambda c: c[sk], reverse=True)
+            nv = N - 1
+            pair_vals = [0] * nv
+            for i in range(nv):
+                x1, y1, z1 = cs[i]
+                x2, y2, z2 = cs[i + 1]
+                mx = x1 + x2
+                t = y1 + y2
+                if t > mx:
+                    mx = t
+                t = z1 + z2
+                if t > mx:
+                    mx = t
+                pair_vals[i] = mx
+
+            res = select_k_nonadjacent(pair_vals, K)
+            if res > best:
+                best = res
+
+        results.append(str(best))
+
+    sys.stdout.write('\n'.join(results) + '\n')
+
+solve()
+```
+### NOTES
+- **Approach:** Try 3 sort orders (X desc, Y desc, Z desc). For each, compute N-1 adjacent pair values as max(X_i+X_{i+1}, Y_i+Y_{i+1}, Z_i+Z_{i+1}), then select K non-adjacent elements to maximize sum. Take max over 3 orders.
+- **Core subroutine (select_k_nonadjacent):** Max-heap + doubly-linked-list with undo-element trick. Pop max, add to answer, remove it and both neighbors, push virtual node with value left+right-center if both neighbors existed. Standard O((N+K) log N) algorithm.
+- **Verified:** Both samples pass (12 and 209/333).
+- **Boundary handling:** When a neighbor is -1 (list boundary), just unlink without creating a virtual node. The `alive` array prevents re-processing dead elements popped from the heap.
+- **Complexity:** O(3 * N log N) per test case for sorting + O(3 * (N+K) log N) for heap ops. Sum of N ≤ 10^5, well within limits.
+- **Potential concern:** The structural lemma (optimal pairing = adjacent in some sort order) is assumed correct based on the plan and sample verification. Stress testing against brute force on small inputs is the next validation step.
+### NEXT
+- Stress-test against brute force on small random inputs (N ≤ 8, K ≤ 4) to verify correctness
+- Run timing check on worst-case input (N=100000, K=50000) to confirm performance
+### STATUS
+continue

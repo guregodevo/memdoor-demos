@@ -1,0 +1,67 @@
+### CODE
+```python
+from typing import List
+
+class Solution:
+    def maxProduct(self, nums: List[int], k: int, limit: int) -> int:
+        # dp_plus: (sum, product) for even-length subsequences (next element gets +)
+        # dp_minus: (sum, product) for odd-length subsequences (next element gets -)
+        dp_plus = set()
+        dp_minus = set()
+        
+        for x in nums:
+            new_plus = set(dp_plus)
+            new_minus = set(dp_minus)
+            
+            # Start new subsequence [x]: length 1, alternating sum = x, product = x
+            # Odd length → next element gets - → goes to dp_minus
+            if x <= limit:
+                new_minus.add((x, x))
+            
+            # Extend dp_plus states: next element gets +, new state goes to dp_minus
+            if x == 0:
+                for s, p in dp_plus:
+                    new_minus.add((s, 0))
+            else:
+                max_p = limit // x
+                for s, p in dp_plus:
+                    if p <= max_p:
+                        new_minus.add((s + x, p * x))
+            
+            # Extend dp_minus states: next element gets -, new state goes to dp_plus
+            if x == 0:
+                for s, p in dp_minus:
+                    new_plus.add((s, 0))
+            else:
+                max_p = limit // x
+                for s, p in dp_minus:
+                    if p <= max_p:
+                        new_plus.add((s - x, p * x))
+            
+            dp_plus = new_plus
+            dp_minus = new_minus
+        
+        # Find max product where alternating sum == k
+        best = -1
+        for s, p in dp_plus:
+            if s == k and p > best:
+                best = p
+        for s, p in dp_minus:
+            if s == k and p > best:
+                best = p
+        return best
+```
+### NOTES
+- **DP approach:** Track (alternating_sum, product) pairs in two sets: dp_plus for even-length subsequences (next element gets +), dp_minus for odd-length subsequences (next element gets -). Both start empty (no empty subsequence included, so non-empty constraint is free).
+- **Transitions:** For each x in nums: start new [x] → dp_minus; extend dp_plus (add +x to sum, multiply product) → dp_minus; extend dp_minus (subtract x from sum, multiply product) → dp_plus. Skip if product*x > limit.
+- **Zero handling:** When x=0, product becomes 0 for all transitions (0 ≤ limit always). Handled with a separate branch to avoid division by zero in limit//x.
+- **Answer extraction:** Scan both dp_plus and dp_minus for sum==k, return max product or -1.
+- **Verified samples:** [1,2,3] k=2 lim=10 → 6; [0,2,3] k=-5 lim=12 → -1; [2,2,3,3] k=0 lim=9 → 9. All confirmed by hand-trace.
+- **Performance:** Products ≤ 5000 formed from factors 0-12 are "smooth numbers" (products of primes 2,3,5,7,11) plus 0. Count is at most a few thousand. Sum range is ±1800. In practice sets stay small (verified: all-12s case gives only ~5 states per set). 150 iterations × small set sizes = well within time.
+- **Key fix from previous attempt:** The truncated code was missing `dp_minus = new_minus` at end of loop and the final answer extraction loop. Both now present.
+### NEXT
+- Run sample tests to confirm all 3 pass
+- Run stress test vs brute force on small random inputs
+- Performance check on worst-case (n=150, mixed values 0-12, limit=5000)
+### STATUS
+continue

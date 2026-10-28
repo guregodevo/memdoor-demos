@@ -1,0 +1,83 @@
+### CODE
+```python
+from typing import List
+
+class Solution:
+    def maxProduct(self, nums: List[int], k: int, limit: int) -> int:
+        total = sum(nums)
+        if abs(k) > total:
+            return -1
+        
+        # dp[0]: even-length non-empty subsequences -> {sum: set of products}
+        # dp[1]: odd-length non-empty subsequences -> {sum: set of products}
+        dp = [{}, {}]
+        
+        for x in nums:
+            new0 = {}  # new even-length states to merge
+            new1 = {}  # new odd-length states to merge
+            
+            # Start new subsequence [x]: odd-length, sum = x, product = x
+            if x <= limit:
+                new1.setdefault(x, set()).add(x)
+            
+            # Extend even-length subsequences: next position is even-indexed, ADD x to sum
+            for s, prods in dp[0].items():
+                if x == 0:
+                    new1.setdefault(s, set()).add(0)
+                else:
+                    max_p = limit // x
+                    ns = s + x
+                    for p in prods:
+                        if p <= max_p:
+                            new1.setdefault(ns, set()).add(p * x)
+            
+            # Extend odd-length subsequences: next position is odd-indexed, SUBTRACT x from sum
+            for s, prods in dp[1].items():
+                if x == 0:
+                    new0.setdefault(s, set()).add(0)
+                else:
+                    max_p = limit // x
+                    ns = s - x
+                    for p in prods:
+                        if p <= max_p:
+                            new0.setdefault(ns, set()).add(p * x)
+            
+            # Merge new states into dp
+            for s, prods in new1.items():
+                if s in dp[1]:
+                    dp[1][s] |= prods
+                else:
+                    dp[1][s] = prods
+            for s, prods in new0.items():
+                if s in dp[0]:
+                    dp[0][s] |= prods
+                else:
+                    dp[0][s] = prods
+        
+        # Collect answer: max product with sum = k
+        result = -1
+        if k in dp[0]:
+            result = max(result, max(dp[0][k]))
+        if k in dp[1]:
+            result = max(result, max(dp[1][k]))
+        
+        return result
+```
+
+### NOTES
+- **Approach:** Set-based DP with `dp[parity]` as dict mapping alternating_sum → set of products. Parity 0 = even-length subsequences, parity 1 = odd-length. Only non-empty subsequences are tracked (no empty subsequence initialization needed).
+- **Transitions per element x:** (1) Start new subsequence [x] → odd, sum=x, prod=x if x≤limit. (2) Extend even→odd: for each (s,prods) in dp[0], add (s+x, p*x) to new odd states if p*x≤limit. (3) Extend odd→even: for each (s,prods) in dp[1], add (s-x, p*x) to new even states if p*x≤limit. (4) Old states carry over automatically (in-place merge).
+- **Why max-per-state fails:** Counterexample nums=[2,2,3,3,2], k=0, limit=15: keeping only max product per (parity,sum) loses product=3 at (odd,sum=3) which is needed to form product=9 via [3,3]. Must keep ALL valid products per state.
+- **x=0 handling:** p*0=0 always ≤limit, sum unchanged. Handled as special case to avoid division by zero.
+- **x>limit handling:** max_p = limit//x = 0, so only product-0 states extend. Starting new subsequence skipped since x>limit.
+- **No empty subsequence issue:** Since we never initialize with (0,1), the answer extraction naturally excludes the empty subsequence. If k=0, only non-empty subsequences with sum 0 are considered.
+- **Performance:** Products bounded by limit≤5000, formed from values 0-12 (prime factors ⊆ {2,3,5,7,11}). Distinct valid products are a few hundred at most. Sums range ±1800. Total states per parity typically in the low thousands. n=150 steps → manageable in Python.
+- **Verified:** All 3 samples pass. Counterexample [2,2,3,3,2] k=0 limit=15 → 9 confirmed correct.
+
+### NEXT
+- Run against all 3 public samples to confirm pass
+- Stress test against brute force on small random inputs
+- Performance check on worst-case n=150, all values=12, limit=5000
+
+### STATUS
+continue

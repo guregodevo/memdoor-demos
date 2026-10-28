@@ -1,0 +1,66 @@
+### CODE
+```python
+from typing import List
+
+class Solution:
+    def maxProduct(self, nums: List[int], k: int, limit: int) -> int:
+        total = sum(nums)
+        if abs(k) > total:
+            return -1
+        
+        # dp[p][s] = set of products (<= limit) achievable with alt_sum=s, next_sign parity p
+        # p=0: next element gets + sign (even index in subsequence)
+        # p=1: next element gets - sign (odd index in subsequence)
+        dp = [{}, {}]
+        
+        for x in nums:
+            new_dp = [{}, {}]
+            
+            # Start new subsequence with x (x at index 0, + sign, next parity=1)
+            if x <= limit:
+                new_dp[1].setdefault(x, set()).add(x)
+            
+            # Extend existing subsequences
+            for p in range(2):
+                for s, products in dp[p].items():
+                    new_s = s + x if p == 0 else s - x
+                    new_p = 1 - p
+                    if x == 0:
+                        new_dp[new_p].setdefault(new_s, set()).add(0)
+                    else:
+                        for prod in products:
+                            new_prod = prod * x
+                            if new_prod <= limit:
+                                new_dp[new_p].setdefault(new_s, set()).add(new_prod)
+            
+            # Merge new_dp into dp (skip is implicit: old states persist)
+            for p in range(2):
+                for s, products in new_dp[p].items():
+                    if s in dp[p]:
+                        dp[p][s].update(products)
+                    else:
+                        dp[p][s] = products
+        
+        # Find answer: max product for alt_sum = k in either parity
+        best = -1
+        for p in range(2):
+            if k in dp[p]:
+                m = max(dp[p][k])
+                if m > best:
+                    best = m
+        
+        return best
+```
+### NOTES
+- **Core bug in max-only DP:** Tracking only the maximum product per (parity, alt_sum) state is incorrect. A smaller product (e.g., 0) may be the only one that survives future limit-pruning while a larger product gets discarded. The failing case [6,7,0,0,10] k=-4 limit=47 requires keeping product 0 in state (p=1, s=6) alongside product 6, because 6*10=60>47 but 0*10=0≤47.
+- **Set-of-products DP:** Store `dp[parity][alt_sum] = set_of_products(≤limit)`. For each element x: build new_dp from (a) starting a subsequence with x, (b) extending every existing state. Merge new_dp into dp (skip is implicit). This correctly preserves all non-dominated products.
+- **Parity convention:** p=0 means next element gets + sign (even index), p=1 means next gets - sign (odd index). Starting a subsequence: x at index 0 gets +, so new state is (p=1, s=x). Extending: if p=0, new_s=s+x; if p=1, new_s=s-x; new_p=1-p.
+- **Performance:** Alt_sum range is [-1800, 1800] (150×12), giving ≤7202 (p,s) states. Product sets are bounded by limit+1=5001 but in practice much smaller (elements 2-12 make products grow fast, so sets stay small). Total operations per element ≈ num_states × avg_set_size, which is manageable.
+- **x==0 optimization:** When x=0, new_prod is always 0 regardless of current product, so skip the inner loop and just add 0.
+- **Edge cases handled:** x=0 (product stays 0), k=0 (reachable via 2-element subseq like [a,a]), all-zero array, |k|>sum(nums) early exit, x>limit (can't start but can extend product-0 states).
+- **Verified correct on:** all 3 samples, stress case [6,7,0,0,10] k=-4 limit=47 → 0.
+### NEXT
+- Run stress test (200+ random inputs vs brute force) to confirm correctness on hidden cases.
+- If stress passes, verify performance on worst-case inputs (n=150, all elements 1-12, limit=5000).
+### STATUS
+continue

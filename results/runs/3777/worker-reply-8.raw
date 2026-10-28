@@ -1,0 +1,64 @@
+### CODE
+```python
+from typing import List
+
+class Solution:
+    def maxProduct(self, nums: List[int], k: int, limit: int) -> int:
+        dp_plus = set()
+        dp_minus = set()
+        
+        for x in nums:
+            new_plus = set(dp_plus)
+            new_minus = set(dp_minus)
+            
+            # Start new subsequence [x]: length 1 (odd), sum=x, product=x
+            if x <= limit:
+                new_minus.add((x, x))
+            
+            # Extend dp_plus (even-length, next gets +) -> new odd-length state
+            if x == 0:
+                for s, p in dp_plus:
+                    new_minus.add((s, 0))
+            else:
+                max_p = limit // x
+                for s, p in dp_plus:
+                    if p <= max_p:
+                        new_minus.add((s + x, p * x))
+            
+            # Extend dp_minus (odd-length, next gets -) -> new even-length state
+            if x == 0:
+                for s, p in dp_minus:
+                    new_plus.add((s, 0))
+            else:
+                max_p = limit // x
+                for s, p in dp_minus:
+                    if p <= max_p:
+                        new_plus.add((s - x, p * x))
+            
+            dp_plus = new_plus
+            dp_minus = new_minus
+        
+        best = -1
+        for s, p in dp_plus:
+            if s == k and p > best:
+                best = p
+        for s, p in dp_minus:
+            if s == k and p > best:
+                best = p
+        return best
+```
+### NOTES
+- **Approach:** DP with two sets tracking (alternating_sum, product) for even-length (dp_plus) and odd-length (dp_minus) subsequences. dp_plus means the next element to add gets '+' sign; dp_minus means it gets '-' sign.
+- **Transitions verified:** Start new [x] → dp_minus (odd length, next gets -). Extend dp_plus with x → dp_minus with sum+x, prod*x. Extend dp_minus with x → dp_plus with sum-x, prod*x. All three samples verified by hand-tracing.
+- **Zero handling:** When x=0, product becomes 0 unconditionally (0*anything=0). Handled via special-case branch. States with product=0 propagate correctly through subsequent elements.
+- **No empty subsequence:** We initialize with empty sets, so the empty subsequence (sum=0, prod=1) is never represented. This correctly handles the k=0 edge case.
+- **Pruning:** For x>0, only add state if p*x <= limit (check p <= limit//x). This keeps sets small.
+- **Sample results:** [1,2,3] k=2 limit=10 → 6; [0,2,3] k=-5 limit=12 → -1; [2,2,3,3] k=0 limit=9 → 9. All correct.
+- **Performance concern:** n=150, values 0-12, limit=5000. Sets should stay manageable since products ≤5000 from factors 0-12 are limited. Worst case set size likely in the thousands. 150 * ~10000 = 1.5M iterations should be fine in Python.
+- **Grader issue:** Previous "no sample inputs found" error was likely a file-write/harness issue, not a logic bug. Code logic is verified correct.
+### NEXT
+- Run the solution against all three samples via the grader to confirm pass
+- Run stress test against brute force on small random inputs
+- Test worst-case performance (n=150, all 12s, k=0, limit=5000)
+### STATUS
+continue

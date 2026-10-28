@@ -1,0 +1,2 @@
+- Re-run the stress test: `python3 /Users/gregoryd/memdoor-coder/lcb-bench/grade.py --public abc399_e --stress` to confirm all 200 iterations pass with the fixed brute.py.
+

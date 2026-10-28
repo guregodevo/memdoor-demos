@@ -1,0 +1,3 @@
+- Run against both provided samples to confirm PASS
+- Run stress test (200+ random small inputs vs brute force) to confirm no mismatches
+- Timing check on worst-case (N=100000, K=50000) to confirm < 5 seconds in Python

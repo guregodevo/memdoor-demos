@@ -1,0 +1,127 @@
+### CODE
+```python
+import sys
+
+class BIT:
+    def __init__(self, n):
+        self.n = n
+        self.tree = [0] * (n + 1)
+    
+    def update(self, i, delta):
+        while i <= self.n:
+            self.tree[i] += delta
+            i += i & (-i)
+    
+    def query(self, i):
+        s = 0
+        while i > 0:
+            s += self.tree[i]
+            i -= i & (-i)
+        return s
+    
+    def kth(self, k):
+        pos = 0
+        bitmask = 1 << (self.n.bit_length() - 1)
+        while bitmask:
+            if pos + bitmask <= self.n and self.tree[pos + bitmask] < k:
+                pos += bitmask
+                k -= self.tree[pos]
+            bitmask >>= 1
+        return pos + 1
+
+def solve():
+    data = sys.stdin.buffer.read().split()
+    N = int(data[0])
+    A = list(map(int, data[1:N+1]))
+    
+    if N % 2 == 0:
+        B = sorted(A)
+        m = N // 2
+        ans = sum(B[m:]) - sum(B[:m])
+        print(ans)
+        return
+    
+    # Odd N: one element is the "barrier"; left and right parts must be matched independently
+    # Coordinate compression
+    sorted_vals = sorted(set(A))
+    comp_map = {v: i + 1 for i, v in enumerate(sorted_vals)}
+    compressed = [comp_map[a] for a in A]
+    val = [0] + sorted_vals  # 1-indexed
+    n_comp = len(sorted_vals)
+    
+    # Left pass: for each odd f (1-indexed), left part is A[0..f-2], length f-1
+    left_score = [0] * (N + 1)
+    count_bit = BIT(n_comp)
+    sum_bit = BIT(n_comp)
+    total_left = 0
+    added = 0
+    
+    for f in range(1, N + 1, 2):
+        target = f - 1
+        while added < target:
+            c = compressed[added]
+            count_bit.update(c, 1)
+            sum_bit.update(c, A[added])
+            total_left += A[added]
+            added += 1
+        
+        k = (f - 1) // 2
+        if k == 0:
+            left_score[f] = 0
+        else:
+            pos = count_bit.kth(k)
+            sum_below = sum_bit.query(pos - 1)
+            count_below = count_bit.query(pos - 1)
+            sum_k_smallest = sum_below + (k - count_below) * val[pos]
+            left_score[f] = total_left - 2 * sum_k_smallest
+    
+    # Right pass: for each odd f (1-indexed), right part is A[f..N-1], length N-f
+    right_score = [0] * (N + 1)
+    count_bit_r = BIT(n_comp)
+    sum_bit_r = BIT(n_comp)
+    total_right = 0
+    added_r = 0
+    
+    for f in range(N, 0, -2):
+        target_r = N - f
+        while added_r < target_r:
+            idx = N - 1 - added_r
+            c = compressed[idx]
+            count_bit_r.update(c, 1)
+            sum_bit_r.update(c, A[idx])
+            total_right += A[idx]
+            added_r += 1
+        
+        k = (N - f) // 2
+        if k == 0:
+            right_score[f] = 0
+        else:
+            pos = count_bit_r.kth(k)
+            sum_below = sum_bit_r.query(pos - 1)
+            count_below = count_bit_r.query(pos - 1)
+            sum_k_smallest = sum_below + (k - count_below) * val[pos]
+            right_score[f] = total_right - 2 * sum_k_smallest
+    
+    ans = 0
+    for f in range(1, N + 1, 2):
+        s = left_score[f] + right_score[f]
+        if s > ans:
+            ans = s
+    print(ans)
+
+solve()
+```
+### NOTES
+- **Core insight (corrected):** For odd N=2m+1, the leftover element is a permanent barrier — elements on opposite sides can never become adjacent. The leftover must be at an odd 1-indexed position f so both sides have even length. Answer = max over odd f of (match_score(left) + match_score(right)).
+- **Even-length theorem:** For any 2k elements, the max non-crossing perfect matching score = (sum of largest k) - (sum of smallest k). This equals total_sum - 2*(sum of k smallest).
+- **Odd-N algorithm:** For each odd f, left part = A[0..f-2] (length f-1), right part = A[f..N-1] (length N-f). Use Fenwick trees (count + sum) with coordinate compression. Binary search on BIT to find k-th smallest, then compute sum of k smallest in O(log N).
+- **Why old formula was wrong:** The "sort and pick 3 candidates" approach ignored the spatial constraint — you can't pair elements from opposite sides of the barrier. Example: N=5, [23,4,25,19,17] gives 25 (not 27) because the best barrier is at position 5 (value 17), pairing left {23,4,25,19} → (19+25)-(4+23)=17+25-4-23... actually left_score=25, right_score=0, total=25.
+- **Fenwick kth implementation:** Standard binary lifting on the BIT tree. Finds smallest index i where prefix_count(i) >= k. Then sum_k_smallest = sum_bit.query(pos-1) + (k - count_bit.query(pos-1)) * val[pos].
+- **Complexity:** O(N log N) for both passes. N up to 3×10^5 → ~5M BIT ops, fine in Python.
+- **Verified:** Sample 1 (N=4, even): 5. Sample 2 (N=7): 14 (f=1 gives 14). Sample 3 (N=5, all 1s): 0. Stress case (N=5, [23,4,25,19,17]): 25. All pass.
+- **Even-N unchanged:** Sort, answer = sum(largest half) - sum(smallest half). O(N log N).
+### NEXT
+- Run stress test (200 random inputs vs brute force) to confirm no more mismatches
+- Check performance on N=3×10^5 (should be well within time limit)
+### STATUS
+continue

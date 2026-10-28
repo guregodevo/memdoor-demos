@@ -1,0 +1,4 @@
+- Implement the $O(N)$ DP for the Inclusion-Exclusion sum over balanced cuts.
+- Test against Sample 3 (N=9) to verify the formula.
+- Optimize factorial precomputation.
+

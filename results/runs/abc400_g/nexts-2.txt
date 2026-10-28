@@ -1,0 +1,2 @@
+- Run stress test (200 random inputs N≤10 vs brute force) to confirm correctness
+- Run timing test on worst-case N=100000, K=50000

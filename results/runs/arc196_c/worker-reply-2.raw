@@ -1,0 +1,105 @@
+### CODE
+```python
+import sys
+from itertools import permutations
+
+MOD = 998244353
+
+def is_strongly_connected(n, adj):
+    # adj is list of lists
+    # Check if every node is reachable from node 0
+    visited = [False] * n
+    stack = [0]
+    visited[0] = True
+    while stack:
+        u = stack.pop()
+        for v in adj[u]:
+            if not visited[v]:
+                visited[v] = True
+                stack.append(v)
+    if not all(visited):
+        return False
+    # Check if every node can reach node 0, i.e., node 0 is reachable from every node in the reverse graph
+    radj = [[] for _ in range(n)]
+    for u in range(n):
+        for v in adj[u]:
+            radj[v].append(u)
+    visited = [False] * n
+    stack = [0]
+    visited[0] = True
+    while stack:
+        u = stack.pop()
+        for v in radj[u]:
+            if not visited[v]:
+                visited[v] = True
+                stack.append(v)
+    if not all(visited):
+        return False
+    return True
+
+def solve():
+    data = sys.stdin.buffer.read().split()
+    if not data:
+        return
+    N = int(data[0])
+    S = data[1].decode()
+    n = 2 * N
+    
+    whites = [i for i in range(n) if S[i] == 'W']
+    blacks = [i for i in range(n) if S[i] == 'B']
+    
+    count = 0
+    # Iterate over all permutations of black indices
+    for perm in permutations(blacks):
+        adj = [[] for _ in range(n)]
+        valid = True
+        # Base edges
+        for i in range(n - 1):
+            adj[i].append(i + 1)
+        # Added edges
+        for i in range(N):
+            w = whites[i]
+            b = perm[i]
+            adj[w].append(b)
+            
+        if is_strongly_connected(n, adj):
+            count += 1
+    print(count)
+
+if __name__ == '__main__':
+    solve()
+```
+### NOTES
+- **Problem:** Count the number of ways to pair White vertices to Black vertices in a directed path graph $1 \to 2 \to \dots \to 2N$ such that the resulting graph is strongly connected. The added edge is $W \to B$.
+- **Strong Connectivity Condition:** The graph is strongly connected if and only if for every cut $k \in \{1, \dots, 2N-1\}$, there is at least one added edge from the right side $\{k+1, \dots, 2N\}$ to the left side $\{1, \dots, k\}$.
+  - Let $W_{\le k}$ be the set of White vertices in $\{1, \dots, k\}$ and $B_{\le k}$ be the set of Black vertices in $\{1, \dots, k\}$.
+  - The added edges are from $w \in W$ to $\sigma(w) \in B$.
+  - An added edge crosses cut $k$ from right to left if and only if $w > k$ and $\sigma(w) \le k$.
+  - Thus, the condition is: $\forall k \in \{1, \dots, 2N-1\}, \exists w \in W$ such that $w > k$ and $\sigma(w) \le k$.
+  - Equivalently, let $X_k$ be the number of pairs $(w, \sigma(w))$ such that $w \le k$ and $\sigma(w) \le k$. Let $B_k = |B_{\le k}|$.
+  - The number of pairs with $w > k$ and $\sigma(w) \le k$ is $B_k - X_k$.
+  - The condition is $B_k - X_k \ge 1 \implies X_k \le B_k - 1$.
+- **Observations:**
+  - If $S_1 = W$, then $B_1 = 0$. For $k=1$, we need $X_1 \le -1$, which is impossible. So $S_1$ must be $B$.
+  - If $S_{2N} = B$, then $W_{>2N-1}$ is empty. For $k=2N-1$, we need an edge from $\{2N\}$ to $\{1, \dots, 2N-1\}$. But $2N$ is Black, so it cannot be a source. Thus $S_{2N}$ must be $W$.
+  - For $S=BBWW$ ($N=2$), both pairings are valid. Answer is 2.
+  - For $S=BWBW$ ($N=2$), only one pairing is valid. Answer is 1.
+  - The previous formula $\frac{N!}{\prod d_j}$ was incorrect.
+- **Next Steps:**
+  - Use the brute force solution to generate data for small $N$.
+  - Analyze the pattern of the answer in terms of the string $S$.
+  - The condition $X_k \le B_k - 1$ looks like a generalized ballot problem or can be solved with DP if we can simplify the state.
+  - State might be related to the number of "open" black vertices that are not yet matched to a white in the prefix?
+  - Let's define $dp[i][j]$ where $i$ is the prefix length and $j$ is the number of "active" constraints? Or maybe the number of black vertices in the prefix that are matched to white vertices in the suffix?
+  - Actually, the condition $X_k \le B_k - 1$ must hold for all $k$. This is a global constraint on the permutation $\sigma$.
+  - This is equivalent to saying that the permutation $\sigma$ (viewed as a bijection between positions) does not have a "cycle" that is fully contained in any proper prefix of the positions? No, that's not right. It's a prefix constraint.
+  - Let's run the brute force to find the formula.
+
+### NEXT
+- Run the brute force solution on small random inputs to verify the logic.
+- Analyze the outputs to find a pattern.
+- Derive the correct combinatorial formula or DP.
+- Implement the efficient solution.
+
+### STATUS
+continue

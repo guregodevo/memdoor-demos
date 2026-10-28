@@ -1,0 +1,3 @@
+- Run solution.py on sample input and verify output matches expected
+- Performance test with Q=200000 random queries
+- Edge-case verification (A=36, A=10^12)

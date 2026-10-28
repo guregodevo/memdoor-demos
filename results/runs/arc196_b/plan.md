@@ -1,0 +1,10 @@
+### PLAN
+The key insight is that for each cell, given its top-edge state, the bottom-edge state is fully determined by the tile type (flipped for A, same for B). This makes the row-to-row transition deterministic and per-bit, so the torus wraparound constraint reduces to: every column must have an even number of A tiles. Given that, each row imposes linear (XOR) constraints on the initial top-mask bits at B-cell positions — specifically, consecutive B cells in a row yield an equation of the form t₀[a] XOR t₀[b] = c. The answer is 2^(#all-A-rows + W − rank) if the system is consistent (and W is even if any all-A row exists), else 0. We build a graph where nodes are columns and edges encode these XOR constraints, then use BFS to check consistency and compute the rank in O(HW) total.
+
+### TASKS
+- **Verify column parity & all-A rows:** For each column, count A's; if any is odd → answer 0. Identify all-A rows; if any exists and W is odd → answer 0. Record `all_a_count`.
+- **Compute prefix-A parity f_i:** Maintain a running XOR array `f[j]` (initially all 0). Before processing row i, `f[j]` holds the parity of A's in column j from rows 0..i-1. After processing row i, update `f[j] ^= (S[i][j]=='A')`.
+- **Build constraint graph edges:** For each row with at least one B, list B positions b₁<…<bₘ. For each consecutive pair (cyclically), compute d = (gap_length mod 2) and c = f[b_k] XOR f[b_{k+1}] XOR d. Add undirected edge (b_k, b_{k+1}) with weight c to a graph on W nodes.
+- **Check consistency & compute rank via BFS:** Run BFS/DFS on the constraint graph. For each connected component, assign a value to the root, propagate XOR constraints to neighbors; if a contradiction is found → answer 0. Track `nodes_involved` and `num_components`. Rank = nodes_involved − num_components.
+- **Compute final answer:** answer = pow(2, all_a_count + W − rank, 998244353). Handle the edge case where the graph has no edges (rank=0, answer = 2^(all_a_count + W)).
+- **Implement & test:** Write `solution.py` reading T test cases from stdin, applying the above per case, printing answers. Verify against the 3 provided samples.

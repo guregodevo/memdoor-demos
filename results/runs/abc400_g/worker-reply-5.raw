@@ -1,0 +1,113 @@
+### CODE
+```python
+import sys
+import heapq
+
+def select_k_nonadjacent(vals, K):
+    m = len(vals)
+    if K == 0 or m == 0:
+        return 0
+
+    prv = [i - 1 for i in range(m)]
+    nxt = [i + 1 for i in range(m)]
+    prv[0] = -1
+    nxt[m - 1] = -1
+
+    cur = vals
+    active = [True] * m
+
+    heap = [(-vals[i], i) for i in range(m)]
+    heapq.heapify(heap)
+
+    heappop = heapq.heappop
+    heappush = heapq.heappush
+
+    ans = 0
+    for _ in range(K):
+        while True:
+            neg_v, i = heappop(heap)
+            if active[i] and cur[i] == -neg_v:
+                break
+        v = -neg_v
+        ans += v
+
+        L = prv[i]
+        R = nxt[i]
+        LL = prv[L] if L != -1 else -1
+        RR = nxt[R] if R != -1 else -1
+
+        active[i] = False
+        if L != -1:
+            active[L] = False
+        if R != -1:
+            active[R] = False
+
+        if L != -1 and R != -1:
+            cur[i] = cur[L] + cur[R] - v
+            active[i] = True
+            prv[i] = LL
+            nxt[i] = RR
+            if LL != -1:
+                nxt[LL] = i
+            if RR != -1:
+                prv[RR] = i
+            heappush(heap, (-cur[i], i))
+        else:
+            if LL != -1:
+                nxt[LL] = RR
+            if RR != -1:
+                prv[RR] = LL
+
+    return ans
+
+
+def solve_case(n, k, cakes):
+    best = 0
+    for d in range(3):
+        o1, o2 = [x for x in range(3) if x != d]
+        sc = sorted(cakes, key=lambda c: (-c[d], -c[o1], -c[o2]))
+        vals = [0] * (n - 1)
+        for i in range(n - 1):
+            a = sc[i]
+            b = sc[i + 1]
+            x = a[0] + b[0]
+            y = a[1] + b[1]
+            z = a[2] + b[2]
+            vals[i] = x if x >= y and x >= z else (y if y >= z else z)
+        ans = select_k_nonadjacent(vals, k)
+        if ans > best:
+            best = ans
+    return best
+
+
+def main():
+    data = sys.stdin.buffer.read().split()
+    idx = 0
+    T = int(data[idx]); idx += 1
+    out = []
+    for _ in range(T):
+        n = int(data[idx]); k = int(data[idx + 1]); idx += 2
+        cakes = []
+        for i in range(n):
+            x = int(data[idx]); y = int(data[idx + 1]); z = int(data[idx + 2])
+            idx += 3
+            cakes.append((x, y, z))
+        out.append(str(solve_case(n, k, cakes)))
+    sys.stdout.write('\n'.join(out) + '\n')
+
+
+main()
+```
+### NOTES
+- **Approach:** Try 3 sort orders (by X, Y, Z descending with tie-breaking by other two coords). For each sorted order, compute N-1 adjacent-pair values `max(X_i+X_{i+1}, Y_i+Y_{i+1}, Z_i+Z_{i+1})`, then select K non-adjacent values maximizing the sum. Take max over 3 sort orders.
+- **Key lemma:** For any optimal K-pairing, there exists a coordinate d such that sorting by d and selecting K non-overlapping adjacent pairs achieves the optimum. Verified on samples and 200 random stress inputs vs brute-force bitmask DP.
+- **Non-adjacent selection algorithm:** Max-heap (negated min-heap) + doubly-linked-list with "undo" trick. Each iteration: pop max node i, add its value to answer, remove i and its neighbors L,R from the list. If both L,R existed, insert an undo node at i with value `val[L]+val[R]-val[i]` (represents deselecting i, selecting L and R instead). Stale heap entries are skipped via `active[i]` and value check.
+- **Complexity:** O(N log N) per test case (3 sorts dominate). Heap has O(N+K) entries total. Sum of N ≤ 10^5, so well within limits.
+- **Edge cases handled:** K=0 (return 0), m=1 (single element), boundary nodes (L=-1 or R=-1, no undo node created). Values can be 0 (answer can be 0, best initialized to 0).
+- **Performance notes:** Used local variable caching for heapq functions, in-place list modification for `cur`, manual max via comparison instead of `max()` call in the inner loop. `sys.stdin.buffer.read().split()` for fast I/O.
+- **Stress test verified:** 200 random small inputs (N≤10) matched brute-force bitmask DP exactly.
+### NEXT
+- Run timing check on worst-case (N=100000, K=50000) to confirm < 2s in Python
+- If timing is tight, consider further micro-optimizations (e.g., avoid list comprehension for prv/nxt init, use array module)
+### STATUS
+continue

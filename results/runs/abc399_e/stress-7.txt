@@ -1,0 +1,7 @@
+[STRESS: FAILED -- solution.py or brute.py timed out (2 s) or crashed on iteration 4. INPUT:]
+6
+phupiv
+cprqkd
+--- solution.py:
+-1
+--- brute.py:

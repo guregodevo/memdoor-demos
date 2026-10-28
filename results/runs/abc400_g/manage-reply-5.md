@@ -1,0 +1,32 @@
+### STATUS
+continue
+
+### NEXT
+Replace the current bitmask-DP solution entirely with the efficient 3-sorting + max-heap non-adjacent selection algorithm. The solution must handle N up to 10^5. Implementation details:
+
+1. **I/O**: Read T test cases. For each, read N, K, then N lines of (X, Y, Z).
+
+2. **Core subroutine `select_k_nonadjacent(vals, K)`**: Given a list of m=N-1 integers, select exactly K non-adjacent indices maximizing the sum. Use the classic max-heap + doubly-linked-list "undo" trick:
+   - Build a doubly-linked list over positions 0..m-1.
+   - Max-heap (via Python's min-heap with negated values) of (-vals[i], i).
+   - Maintain an `active[]` boolean array.
+   - Repeat K times: pop the max (skip stale entries where `not active[i]` or value mismatch). Add to answer. Let L=prev[i], R=nxt[i], LL=prev[L] (or -1), RR=nxt[R] (or -1). Deactivate i, L, R. Fix links: connect LL→RR. If both L and R existed, set vals[i]=vals[L]+vals[R]-old_val[i], reactivate i, insert between LL and RR, push onto heap.
+   - Return accumulated answer.
+
+3. **Per-test-case solver**: For each of the 3 sort keys d ∈ {0,1,2} (X, Y, Z):
+   - Sort cakes by (cake[d] desc, cake[other1] desc, cake[other2] desc) for deterministic tie-breaking.
+   - Compute the N-1 adjacent-pair values: w[j] = max(sorted[j][0]+sorted[j+1][0], sorted[j][1]+sorted[j+1][1], sorted[j][2]+sorted[j+1][2]).
+   - Call select_k_nonadjacent(w, K).
+   - Track the maximum over the 3 sort orders.
+
+4. **Output**: Print one answer per line.
+
+5. **Optimization for Python speed**: Use local variable caching in the inner heap loop; avoid attribute lookups; use `sys.stdin.buffer.read()` for fast input; pre-allocate lists where possible.
+
+The final solution.py must pass both provided samples AND the stress test (200 random small inputs vs brute-force bitmask DP).
+
+### TASKS
+- [done] Implement fast input parsing for T test cases
+- [todo] Implement the complete efficient solution: 3-sorting approach with max-heap + doubly-linked-list non-adjacent selection (replaces the broken bitmask DP)
+- [todo] Verify against both samples and run stress test (200 small random inputs vs brute-force)
+- [todo] Timing check on worst-case (N=100000, K=50000) to confirm < 2s in Python

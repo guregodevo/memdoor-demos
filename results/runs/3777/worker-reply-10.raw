@@ -1,0 +1,52 @@
+### CODE
+```python
+from typing import List
+
+class Solution:
+    def maxProduct(self, nums: List[int], k: int, limit: int) -> int:
+        dp_even = set()
+        dp_odd = set()
+        
+        for x in nums:
+            new_even = set(dp_even)
+            new_odd = set(dp_odd)
+            
+            if x <= limit:
+                new_odd.add((x, x))
+            
+            for s, p in dp_odd:
+                new_p = p * x
+                if new_p <= limit:
+                    new_even.add((s - x, new_p))
+            
+            for s, p in dp_even:
+                new_p = p * x
+                if new_p <= limit:
+                    new_odd.add((s + x, new_p))
+            
+            dp_even = new_even
+            dp_odd = new_odd
+        
+        ans = -1
+        for s, p in dp_odd:
+            if s == k and p > ans:
+                ans = p
+        for s, p in dp_even:
+            if s == k and p > ans:
+                ans = p
+        return ans
+```
+### NOTES
+- **Why set-based, not dict-based:** Keeping only max product per sum is INCORRECT. If sum=5 has products 3 and 6, and next x=2 with limit=10: 6*2=12>10 (skip) but 3*2=6≤10 (valid). Must keep all distinct (sum, product) pairs.
+- **State representation:** dp_odd = set of (sum, product) for non-empty odd-length subsequences; dp_even = same for even-length. No empty subsequence tracked.
+- **Transitions per element x:** (a) Start new [x] → add (x, x) to odd if x≤limit; (b) Extend odd states: (s,p)→(s-x, p*x) into even if p*x≤limit; (c) Extend even states: (s,p)→(s+x, p*x) into odd if p*x≤limit. Old states are kept (skip element).
+- **Zero handling:** x=0 gives product 0 for any extension (0≤limit always). Starting [0] gives (0,0) which is valid. Product-0 states propagate correctly.
+- **Performance bound:** Products ≤5000 formed from {0..12} are 5-smooth-ish numbers (2^a·3^b·5^c·7^d·11^e≤5000), at most ~1000-2000 distinct values. Sums bounded by ±1800. In practice set sizes stay well under 100K for n=150. Total work O(n·|S|) ≈ 15M ops worst case, fine in Python.
+- **Verified all 3 samples by hand:** [1,2,3] k=2→6, [0,2,3] k=-5→-1, [2,2,3,3] k=0 limit=9→9. All correct.
+- **Edge cases:** k=0 with no valid non-empty subsequence returns -1 (empty not tracked). x>limit (e.g. x=12, limit=5) can't start new subsequence but can extend product-0 states.
+### NEXT
+- Run grader to confirm samples pass (previous failure was "no sample inputs found" — likely a file format/loading issue, now rewritten cleanly)
+- Run stress test against brute force on small random inputs
+- If performance is an issue on hidden tests, consider optimizing with list-based iteration or early termination
+### STATUS
+continue

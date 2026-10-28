@@ -1,0 +1,3 @@
+- Run the 4 official samples to confirm pass
+- Generate 50+ targeted random tests (N up to 10, biased toward all-26-letter S and cycles) and compare against a brute-force BFS over rename sequences (depth ≤ 7)
+- Specifically stress-test the impossibility boundary: all 26 letters in one cycle vs all 26 with one identity

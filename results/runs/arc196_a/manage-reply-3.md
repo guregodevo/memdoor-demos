@@ -1,0 +1,10 @@
+### STATUS
+done
+
+### NEXT
+
+### TASKS
+- [done] Implement the sorting and prefix-sum computation for even N
+- [done] Implement the odd-N case (leftover element enumeration)
+- [done] Handle I/O and edge cases
+- [done] Test against all 3 provided samples and stress test against brute force

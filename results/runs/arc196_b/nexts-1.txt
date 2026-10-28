@@ -1,0 +1,3 @@
+- Stress test against brute force on small random cases (H,W ≤ 4)
+- Check edge cases: all-A grid (need H,W even → ans=2^(H+W)), all-B grid (ans=2)
+
