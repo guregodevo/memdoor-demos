@@ -8,7 +8,10 @@ import json, sys
 def main():
     if len(sys.argv) < 2:
         print(__doc__); sys.exit(2)
-    v = json.load(open(sys.argv[1]))["q38-fn-5pass"]
+    v = json.load(open(sys.argv[1]))
+    # The 27B (Qwen3.8-27B-FP8 on local vLLM) is q38_* in the first-party run; q38_fn_* is
+    # Qwen3.8 Flash Next, a different model.
+    v = {k: r for k, r in v["firstparty-128k-reasoning-on-5pass"].items() if k.startswith("q38_") and "." not in k}
     ids = sys.argv[2:]
     for run, res in v.items():
         vd = res["verdicts"]

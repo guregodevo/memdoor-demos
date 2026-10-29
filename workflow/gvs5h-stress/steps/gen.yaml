@@ -1,6 +1,6 @@
 type: llm
 when: '! grep -qsxE "done|stopped" status-*.txt'
-model: openrouter:qwen/qwen3.8-27b thinking high order modal,coreweave,parasail,wafer max_tokens 128000
+model: openrouter:qwen/qwen3.8-27b thinking high order modal,coreweave,parasail,wafer,deepinfra temperature 0.2 max_tokens 128000
 requires:
   - table_pattern: read-task
 prompt: |
@@ -23,5 +23,5 @@ prompt: |
   ```
   PROBLEM:
   {{ output "read-task" }}
-timeout: 10m
+timeout: 2h
 max_retries: 1

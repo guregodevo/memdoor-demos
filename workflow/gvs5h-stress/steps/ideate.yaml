@@ -1,5 +1,5 @@
 type: llm
-model: openrouter:qwen/qwen3.8-27b thinking high order modal,coreweave,parasail,wafer max_tokens 128000
+model: openrouter:qwen/qwen3.8-27b thinking high order modal,coreweave,parasail,wafer,deepinfra temperature 0.4 max_tokens 128000
 requires:
   - table_pattern: read-task
   - table_pattern: write-plan
@@ -26,5 +26,5 @@ prompt: |
 
   PLAN:
   {{ output "write-plan" }}
-timeout: 10m
+timeout: 2h
 max_retries: 1

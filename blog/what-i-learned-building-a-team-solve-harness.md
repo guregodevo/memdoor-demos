@@ -26,10 +26,11 @@ One line solves a problem: `/workflow:gvs5h` in the problem's folder.
 Every call goes through my own OpenRouter key and lands in the gateway's ledger with the
 run that made it, so each number below is a sum over a run id.
 
-## 1. The orchestration is worth ten points. The model alone is not Claude.
+## 1. The orchestration is worth twenty points. The model alone is not Claude.
 
-The paper's own table, same grader, their hundred problems: 27B one call 77 to 80, 27B
-with their harness 87 to 89, Fable 5 one call 86 to 89. The harness closes the gap, not the
+The paper's own runs, raw grade, their hundred problems, five passes each: 27B one call 60
+to 71, the same 27B in their harness 83 to 90, Fable 5 one call 86 to 89. The harness closes
+the gap, not the
 model. That is the whole reason to build harnesses out of small models.
 
 ## 2. Ground truth decides the harness.

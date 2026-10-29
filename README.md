@@ -90,7 +90,7 @@ too in most passes, so these six say little yet about harness versus single call
 
 **The single call, 27B, thinking high** (`results/single-27b-thinking-24.tsv`): 21 of 24
 problems solved on all tests, one call each, $0.62 (about 2.6 cents a problem). The authors' single call:
-77 to 80 of 100 (82 to 86 with their grader patch), five passes.
+60 to 71 of 100 (65 to 76 with their grader patch), five passes, on their own Qwen3.8-27B-FP8.
 
 **Earlier, thinking off, all hundred** (`results/*-thinking-off-100.tsv`): the single call and
 Memdoor's own `team-solve` workflow, before the GVS5H build; kept for the record.
@@ -118,25 +118,28 @@ The authors' harness solves both in all five passes.
 
 The same ten ids as the authors' first ten, one at a time, 27B, thinking high, 128K cap,
 through `workflow/gvs5h-stress` (`results/harness-stress-27b.tsv`, with each problem's
-note). The authors' columns are their five passes on the same id (`bench/authors.py`).
+note). The authors' columns are their five passes on the same id (`bench/authors.py`): their
+Qwen3.8-27B-FP8 on local vLLM (`firstparty-128k-reasoning-on-5pass`, `q38_*`) and Fable 5.
+Corrected 2026-10-29: an earlier version of this table showed their Qwen3.8 Flash Next runs
+(`q38_fn_*`), a different model.
 
-| problem | ours | authors' 27B harness | Fable 5 alone |
-|---|---|---|---|
-| arc196_a | 43/43 | 5/5 | 3/5 |
-| arc196_b | 2/2 | 5/5 | 5/5 |
-| arc196_c | 2/43 | 5/5 | 5/5 |
-| arc196_d | 42/42 | 5/5 | 5/5 |
-| 3777 | 43/43 | 4/5 | 5/5 |
-| abc400_e | 5/5 | 5/5 | 5/5 |
-| abc400_g | 2/6 | 5/5 | 5/5 |
-| 3717 | 42/42 | 5/5 | 1/5 |
-| 3765 | 42/42 | 5/5 | 1/5 |
-| abc399_e | 32/44 | 5/5 | 1/5 |
+| problem | ours | authors' 27B harness | authors' 27B single call | Fable 5 alone |
+|---|---|---|---|---|
+| arc196_a | 43/43 | 5/5 | 4/5 | 3/5 |
+| arc196_b | 2/2 | 5/5 | 4/5 | 5/5 |
+| arc196_c | 2/43 | 3/5 | 5/5 | 5/5 |
+| arc196_d | 42/42 | 5/5 | 0/5 | 5/5 |
+| 3777 | 43/43 | 5/5 | 2/5 | 5/5 |
+| abc400_e | 5/5 | 5/5 | 4/5 | 5/5 |
+| abc400_g | 2/6 | 5/5 | 3/5 | 5/5 |
+| 3717 | 42/42 | 5/5 | 2/5 | 1/5 |
+| 3765 | 42/42 | 5/5 | 4/5 | 5/5 |
+| abc399_e | 32/44 | 5/5 | 3/5 | 1/5 |
 
 ![The ten: ours beside the authors' harness and Fable 5 alone](results/the-ten.svg)
 
-**7 of 10**, $4.95 including every failed attempt, one pass. Their harness: 10 of 10 in
-four passes of five. Fable 5 alone: 7 to 9 of 10 by pass. What the three misses taught,
+**7 of 10**, $4.95 including every failed attempt, one pass. Their 27B harness: 9 to 10 of
+10 by pass. Their 27B single call: 4 to 8. Fable 5 alone: 7 to 10. What the three misses taught,
 each fixed in the workflow or the gateway before the next run:
 
 - **arc196_c**: the plan call came back empty four times, 19K to 51K tokens of reasoning

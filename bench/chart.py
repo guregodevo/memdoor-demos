@@ -8,8 +8,10 @@ rows = list(csv.DictReader(open(os.path.join(root, "results", "harness-stress-27
 authors = {}
 if len(sys.argv) > 1 and os.path.exists(sys.argv[1]):
     v = json.load(open(sys.argv[1]))
-    for key, pre in (("harness", "q38_fn_multiagent_p"), ("single", "q38_fn_single_p")):
-        authors[key] = [v["q38-fn-5pass"][f"{pre}{k}"]["verdicts"] for k in range(1, 6)]
+    # The 27B: Qwen3.8-27B-FP8 on local vLLM, q38_* in the first-party run (q38_fn_* is
+    # Qwen3.8 Flash Next, another model).
+    for key, pre in (("harness", "q38_multiagent_p"), ("single", "q38_single_p")):
+        authors[key] = [v["firstparty-128k-reasoning-on-5pass"][f"{pre}{k}"]["verdicts"] for k in range(1, 6)]
     authors["fable5"] = [v["fable5-128k-reasoning-on-5pass"][f"fable5_single_p{k}"]["verdicts"] for k in range(1, 6)]
 
 def passes(key, pid): return sum(1 for vd in authors.get(key, []) if vd.get(pid))
