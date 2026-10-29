@@ -19,7 +19,7 @@ command: |
       if [ "$b" -ne 0 ]; then
           verdict=brutefail; break
       fi
-      if ! diff -q s-out-3.txt b-out-3.txt >/dev/null 2>&1; then
+      if ! python3 -c 'import sys; a, b = (open(f).read().split() for f in sys.argv[1:]); sys.exit(a != b)' s-out-3.txt b-out-3.txt; then  # token by token, as the grader compares
           verdict=mismatch; break
       fi
   done
