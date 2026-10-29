@@ -7,7 +7,7 @@ command: |
   {{ output "finalize" }}
   MEMDOOR_FIN_EOF
   if grep -qsx done status-*.txt 2>/dev/null; then echo "a manager already said done: the ledger is kept as it is"; exit 0; fi
-  awk '/^```python/{f=1;next} /^```[ ]*$/{if(f)exit} f' finalize-reply.md > solution.py
+  awk '/^```python/{f=1;next} /^```[ ]*$/{if(f)exit} f' finalize-reply.md > sol-final.py; if [ -s sol-final.py ]; then mv sol-final.py solution.py; else rm -f sol-final.py; echo "no code in the final reply: solution.py kept"; fi
   cat solution.py
 timeout: 2m
 max_retries: 0

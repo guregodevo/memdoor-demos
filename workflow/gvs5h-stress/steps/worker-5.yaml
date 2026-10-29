@@ -38,8 +38,8 @@ prompt: |
   PLAN:
   {{ output "write-plan" }}
   NOTES:
-  {{ output "write-plan" }}
-  CURRENT WORK (current solution.py):
+  (the current notes.md is printed in full inside CURRENT WORK below)
+  CURRENT WORK (the current solution.py and notes.md in full, and the last worker's report):
   {{ output "write-worker-4" }}
   YOUR TASK:
   {{ output "write-manage-5" }}

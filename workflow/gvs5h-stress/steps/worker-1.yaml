@@ -35,7 +35,7 @@ prompt: |
   PLAN:
   {{ output "write-plan" }}
   NOTES:
-  {{ output "write-plan" }}
+  {{ output "write-ideate" }}
   CURRENT WORK (current solution.py):
   (none yet -- no solution has been written; write a fresh one)
   YOUR TASK:

@@ -7,9 +7,9 @@ command: |
   {{ output "worker-9" }}
   MEMDOOR_WRK_EOF
   if grep -qsxE "done|stopped" status-*.txt 2>/dev/null; then echo "a manager already said done or stopped the loop: the ledger is kept as it is"; exit 0; fi
-  awk '/^```python/{f=1;next} /^```[ ]*$/{if(f)exit} f' worker-reply-9.raw > solution.py
-  awk '/^### NOTES/{f=1;next} /^### /{f=0} f' worker-reply-9.raw > notes.md
+  awk '/^```python/{f=1;next} /^```[ ]*$/{if(f)exit} f' worker-reply-9.raw > sol-new-9.py; if [ -s sol-new-9.py ]; then mv sol-new-9.py solution.py; else rm -f sol-new-9.py; echo "no code in the reply: solution.py kept"; fi
+  awk '/^### NOTES/{f=1;next} /^### /{f=0} f' worker-reply-9.raw > notes-new-9.md; if [ -s notes-new-9.md ]; then mv notes-new-9.md notes.md; else rm -f notes-new-9.md; fi
   awk '/^### NEXT/{f=1;next} /^### /{f=0} f' worker-reply-9.raw > nexts-9.txt
   sed -n '/^### STATUS/,$p' worker-reply-9.raw | tail -n +2 > wstatus-9.txt
   awk '/^### BRUTE/{f=1;next} /^### /{f=0} f' worker-reply-9.raw | awk '/^```python/{f=1;next} /^```[ ]*$/{if(f)exit} f' > brute-new-9.py; if [ -s brute-new-9.py ]; then mv brute-new-9.py brute.py; echo "brute.py rewritten by the worker"; else rm -f brute-new-9.py; fi
-  head -40 worker-reply-9.raw
+  printf '%s\n' '--- solution.py, current, in full ---'; cat solution.py 2>/dev/null; printf '\n%s\n' '--- notes.md, current, in full ---'; cat notes.md 2>/dev/null; printf '\n%s\n' '--- the worker: next steps ---'; cat nexts-9.txt 2>/dev/null; printf '%s\n' '--- the worker: status ---'; cat wstatus-9.txt 2>/dev/null
